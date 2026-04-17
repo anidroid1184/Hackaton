@@ -1,0 +1,29 @@
+# Entornos y dependencias
+node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Builds
+dist/
+build/
+.npm/
+
+# Secretos (CRÍTICO)
+.env
+.env.local
+.env.*.local
+*.pem
+secrets.json
+
+# IDEs y SO
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+*.log

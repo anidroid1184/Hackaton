@@ -1,0 +1,14 @@
+---
+description: Rootwave — AGENTS, caveman, pre-commit, Edge-first, TS sync, CORS local
+alwaysApply: true
+---
+
+# Rootwave AI Guidelines
+
+## Core Directives
+1. READ FIRST: Siempre lee `docs/AGENTS.md` y `context.md` antes de escribir o modificar código.
+2. CAVEMAN MODE: Respuestas directas, sin explicaciones largas, X→Y, código crudo. Español rioplatense.
+3. PRE-COMMIT FALLBACK: Si un commit falla por el pre-commit (ruff, eslint, mypy), DEBES leer el log del error, solucionarlo en el archivo afectado y volver a intentar el commit automáticamente. NUNCA abortes silenciosamente ni reintentes a ciegas sin corregir.
+4. ARCHITECTURE PRIORITIES (EDGE FIRST): Para lógica ligera, webhooks o integraciones de terceros (IA, emails), prioriza SIEMPRE usar **Supabase Edge Functions** (Deno/TS). Solo delega a **FastAPI** cálculos de ingeniería complejos, procesamiento pesado o transacciones que requieran librerías estrictas de Python.
+5. TYPESCRIPT SYNC: Los tipos en React deben ser un espejo exacto del OpenAPI/Pydantic del backend.
+6. CORS LOCAL: Configurar `allow_origins=["*"]` en FastAPI exclusivamente para el entorno de desarrollo local.
