@@ -9,9 +9,11 @@
 
 ### Python / backend
 
-- **uv** para dependencias y ejecución de herramientas:
-  - Añadir dependencias: `uv add <paquete>` (y `uv sync` según flujo del repo).
-  - Ejecutar linters, tests o CLI del proyecto: **`uv run`** (p. ej. `uv run ruff check`, `uv run mypy`, `uv run pytest`).
+- **`pyproject.toml` en la raíz:** solo **herramientas** (Ruff, Mypy, Bandit) y `[tool.uv] package = false` — la raíz **no** es un paquete Python instalable (evita mezclar `backend/`, `frontend/`, `supabase/` en un solo build). `uv sync` en la raíz crea `.venv` para ese tooling.
+- **Código de la API** vivirá en **`backend/`** cuando lo agregues (FastAPI mínimo posible; mucha lógica en Supabase). Opcional más adelante: un `backend/pyproject.toml` propio o **workspace** de uv si el backend crece.
+- **uv** para dependencias y ejecución:
+  - En la raíz: `uv add --dev ruff` (etc.) según necesidad; `uv run ruff`, `uv run mypy`.
+  - Ejecutar linters/tests del backend: **`uv run`** apuntando al entorno que corresponda.
 - No usar `pip install` suelto en el sistema; el entorno del proyecto va con **uv**.
 
 ### Pre-commit

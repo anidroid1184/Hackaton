@@ -2,11 +2,12 @@
 name = "hackathon-rootwave"
 version = "0.0.0"
 requires-python = ">=3.13"
-description = "Monorepo Rootwave — Python tooling centralizado"
+description = "Monorepo Rootwave — raíz solo para tooling (ruff/mypy/bandit). Código Python de la API en backend/ cuando exista; datos mayormente vía Supabase."
 
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+# Raíz del monorepo: no es un paquete instalable. Evita que setuptools descubra
+# backend/, frontend/, supabase/ como top-level packages al hacer `uv sync`.
+[tool.uv]
+package = false
 
 [tool.ruff]
 target-version = "py313"
