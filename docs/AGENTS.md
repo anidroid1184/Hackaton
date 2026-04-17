@@ -24,5 +24,5 @@ El agente actúa como implementador y revisor técnico: sigue `docs/`, no invent
 
 ## Límites
 
-- No commitear secretos.
+- No commitear secretos; en respuestas y ejemplos **filtrar** credenciales (keys, JWT, `.env`, PEM, tokens).
 - No saltar capas del backend (Routers → Domain → Database).

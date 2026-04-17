@@ -25,6 +25,12 @@ Alineado con `docs/AGENTS.md`: compresión, `X→Y`, sin relleno, código direct
 - Tras decisiones de arquitectura, convenciones, bugs o descubrimientos: `mem_save` (no esperar a que lo pidan).
 - Antes de re-decidir algo ya resuelto: `mem_search`.
 
+## Credenciales y secretos (prioridad alta)
+
+- **Filtrar siempre:** no incluir en código, docs, chats ni commits API keys, JWT, `service_role`, `.env` completos, PEM, connection strings con password, ni tokens de terceros. Usar `env(VAR)` / placeholders (`<REDACTED>`).
+- Antes de sugerir un diff o pegar salida de terminal: revisar que no haya secretos colados.
+- **`supabase/` en el repo:** está bien versionar `config.toml`, migraciones y lo acordado en el equipo **sin** secretos embebidos; lo ignorado por `supabase/.gitignore` (p. ej. `.temp`) no se sube. Operación local de CLI: principalmente Sebastián; el repo igual documenta el esquema para todos.
+
 ## Herramientas (convención Rootwave)
 
 Ver `docs/CONVENTIONS.md` en detalle.

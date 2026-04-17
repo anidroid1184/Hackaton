@@ -4,7 +4,7 @@ Comportamiento detallado: `rules/rootwave-ai-guidelines.mdc` (siempre activa) y 
 
 ## No negociable
 
-- No commitear ni imprimir secretos; configuración sensible vía entorno.
+- No commitear ni imprimir secretos; configuración sensible vía entorno. En texto y diffs: **filtrar** credenciales (nunca repetir keys, JWT, `.env` completos, PEM).
 - Validar entradas externas; evitar composición shell insegura.
 - **Canon del repo:** `docs/` por encima del hub genérico. **Tooling:** npm (JS), uv (`uv run`, `uv add`), pre-commit — ver `docs/CONVENTIONS.md`. **Git:** Sebastián → git clásico; resto → pueden usar `gh`. **SO:** Sebastián Ubuntu; Isabel y Santiago Windows (sin Supabase local → mocks).
 

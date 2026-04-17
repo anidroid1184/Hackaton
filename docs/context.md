@@ -8,7 +8,7 @@
 | --- | --- |
 | [AGENTS.md](./AGENTS.md) | Rol, caveman, pre-commit, límites |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Stack, capas Routers → Domain → Database |
-| [CONVENTIONS.md](./CONVENTIONS.md) | npm, uv, pre-commit; git/`gh`; Ubuntu (Sebastián) vs Windows (Isabel, Santiago); mocks sin Supabase local |
+| [CONVENTIONS.md](./CONVENTIONS.md) | npm, uv, pre-commit; git/`gh`; OS; mocks; **credenciales**; `supabase/` en repo sin secretos |
 | [API_SPEC.md](./API_SPEC.md) | Contrato API (si aplica) |
 | [DATABASE.md](./DATABASE.md) | Datos / Supabase |
 | [TASKS.md](./TASKS.md) | Tablero / tareas |

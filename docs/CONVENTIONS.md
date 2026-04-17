@@ -23,6 +23,22 @@
 
 ---
 
+## Seguridad, credenciales y carpeta `supabase/`
+
+### Filtrar credenciales (obligatorio en reglas y en la práctica)
+
+- **Agente y devs:** máximo cuidado al generar texto, diffs, ejemplos de comandos y respuestas: **no pegar ni repetir** API keys, JWT, `service_role`, connection strings completas, contenido de `.env`, claves PEM, tokens OAuth, ni salidas de logs con datos sensibles.
+- Si hace falta mostrar forma: usar placeholders (`<REDACTED>`, `env(NOMBRE_VARIABLE)`, `sb_publishable_xxx`).
+- En código: secretos solo vía **variables de entorno** o secret manager; nunca hardcode en el repo.
+
+### Qué sí entra en git respecto a Supabase
+
+- **Sí** versionar en el repo lo que define el **proyecto** sin secretos: `supabase/config.toml` (plantilla oficial usa `env(...)` para claves), `supabase/migrations/`, seeds, `supabase/.gitignore`.
+- **Sebastián** es quien suele operar **Supabase CLI** en local; igualmente el repo es la **fuente de verdad** del esquema/config para el equipo (Isabel/Santiago siguen con mocks; no necesitan CLI).
+- **No** commitear: archivos ignorados por `supabase/.gitignore` (p. ej. `.temp`, `.branches`), ni `.env` / `.env.keys` con claves reales.
+
+---
+
 ## Backend (Python 3.13)
 
 - **Ruff:** obligatorio como linter y formatter; configuración en `pyproject.toml` (o equivalente). Preferir invocación vía **`uv run ruff`** cuando el proyecto use uv.
