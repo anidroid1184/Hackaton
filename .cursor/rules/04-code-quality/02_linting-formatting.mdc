@@ -1,0 +1,139 @@
+---
+description: Linting and formatting toolchain configuration
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.json', '**/*.md']
+alwaysApply: false
+---
+
+# Linting & Formatting
+
+## Toolchain Requirements
+
+**Rule**: Code must pass ESLint and Prettier before commit.
+
+**Required Tools**:
+1. **Prettier** – default formatter for all supported file types
+2. **ESLint** with TypeScript support and recommended plugins
+3. **Husky** Git hooks + **lint-staged** for pre-commit checks
+
+## Configuration
+
+### Prettier
+
+**Reference**: `.prettierrc` or `prettier.config.js`
+
+**Default configuration**:
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5"
+}
+```
+
+### ESLint
+
+**Reference**: `.eslintrc.js` or `.eslintrc.json`
+
+**Required plugins**:
+- `@typescript-eslint` – TypeScript lint rules
+- `eslint-plugin-react` – React best-practices
+- `eslint-plugin-tailwindcss` – Tailwind utility validation (where applicable)
+
+**Example configuration**:
+```json
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended"
+  ],
+  "rules": {
+    "complexity": ["error", 10],
+    "@typescript-eslint/no-explicit-any": "error"
+  }
+}
+```
+
+### lint-staged Configuration
+
+**Reference**: `.lintstagedrc.json` or `package.json` → `lint-staged`
+
+**Configuration**:
+```json
+{
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json,md}": [
+      "prettier --write"
+    ],
+    "**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ]
+  }
+}
+```
+
+### Husky Setup
+
+**Reference**: `.husky/pre-commit`
+
+**package.json scripts**:
+```json
+{
+  "scripts": {
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
+  }
+}
+```
+
+## Pre-commit Workflow
+
+**Rule**: Pre-commit hooks must run lint, type-check, and format checks.
+
+**Actions**:
+- ✅ Run `pnpm lint` (ESLint)
+- ✅ Run `pnpm format:check` (Prettier)
+- ✅ Run `pnpm typecheck` (TypeScript)
+- 🚫 Never disable ESLint rules without team approval
+- 🚫 Never commit if checks fail
+
+**If checks fail**: Commit is aborted. Fix issues and retry.
+
+## Editor Configuration
+
+**Rule**: Use `.editorconfig` for editor consistency.
+
+**Reference**: `.editorconfig`
+
+**Example**:
+```ini
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+```
+
+## CSS Naming
+
+**Rule**: Use BEM methodology for raw CSS.
+
+**Example**:
+```css
+/* ✅ BEM format */
+.user-card {
+}
+.user-card__header {
+}
+.user-card__header--highlighted {
+}
+.user-card__body {
+}
+```
+
+**Reference**: CSS modules or styled-components preferred over raw CSS.

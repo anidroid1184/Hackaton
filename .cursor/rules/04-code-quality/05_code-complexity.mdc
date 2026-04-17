@@ -1,0 +1,108 @@
+---
+description: Code complexity metrics and refactoring guidelines
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+# Code Complexity Standards
+
+## Metrics Targets
+
+**Rule**: Maintain code complexity within acceptable limits.
+
+**Targets**:
+
+- Cyclomatic complexity: <10 per function
+- Maintainability index: >70
+- Code duplication: <3%
+- Lines per file: <300
+- Lines per function: <50
+
+## Tools
+
+- ESLint complexity rules: `complexity: ["error", 10]`
+- SonarQube for maintainability index
+- `jscpd` for duplication detection: `jscpd --min-lines 5 --min-tokens 50 .`
+- CodeScene `code_health_score` (via MCP): returns a 1.0-10.0 score covering complexity, nesting depth, method size, and readability. Run on any file to get a single health metric. Use `code_health_review` for a detailed breakdown of specific code smells.
+- CodeScene `code_health_auto_refactor` (via MCP): automatically refactors functions with Complex Conditional, Bumpy Road, Deep Nesting, Large Method, or Complex Method smells. Supported for JS/TS, Java, C#, C++.
+
+## Examples
+
+### Reducing Cyclomatic Complexity
+
+```typescript
+// ❌ High complexity (15+)
+function processOrder(order: Order) {
+  if (order.status === 'pending') {
+    if (order.items.length > 0) {
+      if (order.total > 100) {
+        if (order.customer.isPremium) {
+          // ... nested logic
+        }
+      }
+    }
+  }
+}
+
+// ✅ Refactored (complexity: 3)
+function processOrder(order: Order) {
+  if (!isValidOrder(order)) return;
+  if (order.total > 100) applyDiscount(order);
+  updateOrderStatus(order);
+}
+
+function isValidOrder(order: Order): boolean {
+  return order.status === 'pending' && order.items.length > 0;
+}
+```
+
+### Eliminating Code Duplication
+
+```typescript
+// ❌ Duplicated logic
+function validateUser(user: User) {
+  if (!user.email || !user.email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+  if (!user.age || user.age < 18) {
+    throw new Error('Invalid age');
+  }
+}
+
+function validateAdmin(admin: Admin) {
+  if (!admin.email || !admin.email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+  if (!admin.age || admin.age < 18) {
+    throw new Error('Invalid age');
+  }
+}
+
+// ✅ Extracted validation
+function validateEmail(email: string): void {
+  if (!email || !email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+}
+
+function validateAge(age: number): void {
+  if (!age || age < 18) {
+    throw new Error('Invalid age');
+  }
+}
+
+function validateUser(user: User) {
+  validateEmail(user.email);
+  validateAge(user.age);
+}
+```
+
+## Refactoring Checklist
+
+Before refactoring:
+
+1. Write tests covering current behavior
+2. Identify complexity hotspots (use ESLint, CodeScene `code_health_review`, or `list_technical_debt_hotspots_for_project`)
+3. For functions with code smells under 300 lines, try CodeScene `code_health_auto_refactor` first
+4. Extract functions following Single Responsibility
+5. Verify tests still pass after refactoring
+6. Re-run `code_health_score` to confirm metrics improved

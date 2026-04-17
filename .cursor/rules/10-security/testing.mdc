@@ -1,0 +1,167 @@
+---
+description: 'Reglas de testing para este repositorio'
+globs:
+  - 'src/**'
+  - 'apps/**'
+  - 'services/**'
+  - 'tests/**'
+mode: 'auto' # auto-attach para archivos de código y tests
+alwaysApply: false
+---
+
+## WHY - Propósito
+
+- Este repositorio prioriza la entrega de software de alta calidad usando prácticas de **full stack testing** en toda la pila (UI, APIs, lógica de negocio, datos, móvil e infraestructura).
+- Ante ambigüedades, el agente debe priorizar calidad, seguridad y experiencia de usuario sobre la velocidad o atajos técnicos.
+
+## Principios fundamentales y estrategia
+
+- Calidad holística: evaluar funcionalidad, seguridad, rendimiento, accesibilidad y calidad visual en todas las capas.
+- Shift-left: iniciar pruebas en paralelo al análisis y mantenerlas durante todo el ciclo para reducir costo y complejidad de corrección.
+- Responsabilidad compartida: desarrollo, QA y negocio asumen comprobaciones de calidad en sus fases.
+- Pirámide de pruebas: base amplia de micropruebas (unidad, integración) y menor volumen en macronivel (UI, E2E) para feedback rápido y estable.
+- Profundidad y amplitud: combinar mirada macro (flujos e integraciones) y micro (validaciones y lógica) de forma continua.
+
+## WHAT - Contexto de testing
+
+- El agente debe identificar el tipo de sistema (web, API, móvil, data, IoT, etc.) y adaptar la estrategia de pruebas a ese contexto y a los riesgos.
+- Antes de proponer una estrategia de testing, el agente debe buscar o preguntar por:
+  - Arquitectura y componentes clave.
+  - Tecnologías usadas (frameworks, bases de datos, colas, etc.).
+  - Pipelines de CI/CD y restricciones de negocio relevantes.
+
+## HOW - Reglas de Full Stack Testing
+
+### Filosofía de testing
+
+- Prefiere muchos tests pequeños y rápidos (unidad y servicios) frente a pocos tests end-to-end lentos y frágiles.
+- Cada test debe verificar un único comportamiento y seguir el patrón Arrange-Act-Assert (AAA).
+- Los tests deben ser legibles, con nombres descriptivos que expliquen la intención y el escenario.
+- Todos los tests deben ser independientes entre sí; no encadenes tests ni dependas del orden de ejecución.
+- Evita que los tests dependan de datos estáticos o entornos específicos; pide o genera datos de prueba controlados.
+
+### Tipos de prueba y comandos por capa
+
+- Unitarias (micro): validar lógica mínima y entradas básicas. Herramientas: JUnit/TestNG (Java), Jest/Mocha (JS/TS).
+- Contrato (micro): validar estructura de servicios dependientes con stubs del consumidor. Herramientas: Pact, Postman.
+- Servicio/API (macro): tratar APIs como productos; validar reglas de negocio y códigos HTTP. Herramientas: REST Assured (Java), Karate.
+- UI funcional (macro): cubrir solo flujos críticos E2E e integración entre componentes; evita duplicar validaciones ya cubiertas en unidad/API. Herramientas: Selenium WebDriver, Cypress, Playwright.
+- Antipatrones a evitar:
+  - Cono de helado: exceso de pruebas UI frágiles frente a pocas unitarias.
+  - Magdalena: duplicar las mismas validaciones en varias capas; acordar qué se prueba en cada nivel.
+
+### Pila tecnológica de automatización
+
+- Propón frameworks de tests alineados con la pila de desarrollo (mismo lenguaje/plataforma siempre que sea posible).
+- Mantén las pruebas de cada capa cerca de su código:
+  - tests de unidad e integración en el propio módulo/servicio.
+  - tests de UI end-to-end en un proyecto de automatización separado solo cuando sea necesario.
+- Evita mezclar en un mismo proyecto de tests pruebas de capas muy distintas si dificulta el mantenimiento.
+
+### Diseño de tests unitarios e integración
+
+- Para código Java, prioriza JUnit/TestNG; para JS/TS usa Jest/Mocha; para .NET usa NUnit/xUnit; sugiere el framework estándar del stack.
+- Al diseñar un test unitario:
+  - aísla dependencias externas usando mocks/stubs.
+  - céntrate en la lógica de negocio, no en el framework ni la infraestructura.
+- Usa tests de integración cuando debas verificar interacción real con bases de datos, colas, servicios externos, etc.
+
+### Pruebas de APIs y servicios
+
+- Para APIs REST en Java, sugiere REST Assured; en JS/TS, sugiere herramientas equivalentes (p. ej. supertest, Playwright API).
+- Para cada endpoint diseña tests que cubran:
+  - casos felices (200/201), errores de cliente (4xx) y servidor (5xx).
+  - estructura y tipos de los campos clave de la respuesta, no solo el código de estado.
+- Promueve pruebas de contrato consumidor-proveedor (ej. Pact) cuando múltiples servicios intercambian datos críticos.
+- Sugiere usar stubs/mocks de servicios externos para escenarios no controlables en entornos reales.
+
+### Seguridad y datos
+
+- Modelado de amenazas iterativo (STRIDE) por historia de usuario (~15 minutos).
+- Shift-left de seguridad: ejecutar Trivy para secretos (`trivy fs --scanners secret .`) y vulnerabilidades de dependencias (`trivy fs --scanners vuln --severity HIGH,CRITICAL .`). Alternativas: Talisman para secretos, OWASP Dependency-Check para SCA.
+- Principio de menor privilegio; datos sensibles siempre cifrados o hasheados y nunca logueados en texto plano.
+- DAST en CI: integrar OWASP ZAP para inyección SQL, XSS y ataques activos.
+- Datos: prioriza casos de concurrencia, replicación y validación de entrada; verifica flujo en BD, cachés, colas y DLQ; usa SQL directo o Testcontainers para entornos desechables.
+
+### Automatización de UI web (Selenium / Cypress / Playwright)
+
+- Minimiza el número de tests de UI end-to-end; céntralos en los flujos de negocio más críticos.
+- Aplica patrón de Page Object (o equivalente) para encapsular localizadores y acciones de página.
+- Prefiere localizadores estables: IDs semánticos, data-attributes y selectores robustos; evita XPaths frágiles.
+- Usa esperas explícitas/inteligentes; evita sleeps fijos salvo como último recurso.
+- Separa:
+  - lógica de pruebas (aserciones, escenarios).
+  - de implementación de páginas/acciones.
+- Al proponer nuevos tests de UI, indica siempre:
+  - precondiciones (estado de datos, login, feature flags).
+  - pasos de usuario.
+  - aserciones concretas (texto, estado, navegación).
+
+### Pruebas visuales y entre navegadores
+
+- Para validar apariencia, recomienda herramientas de pruebas visuales (comparación de screenshots) antes que inspecciones manuales.
+- Sugiere ejecutar pruebas visuales en un subconjunto de navegadores y tamaños de pantalla que represente ~80 % del tráfico objetivo.
+- Para compatibilidad de frontend:
+  - apóyate en frameworks modernos (React, Vue, Bootstrap, Tailwind) y tablas de compatibilidad (tipo caniuse) para decidir si usar ciertas APIs/CSS avanzadas.
+  - cuando propongas CSS o JS, evita características no soportadas en navegadores objetivo si se especifican.
+
+### Rendimiento frontend
+
+- Ten en cuenta que gran parte del tiempo de carga proviene de recursos frontend; propone optimizaciones como:
+  - reducir tamaño de imágenes y scripts.
+  - aplicar lazy-loading y división de código donde tenga sentido.
+- Sugiere integrar herramientas de medición de rendimiento (p. ej. perfiles de navegador, Lighthouse u otras) en el flujo de validación.
+
+### Accesibilidad
+
+- Considera siempre requisitos WCAG 2.x cuando trabajes en frontend.
+- Recomienda:
+  - uso de roles ARIA y etiquetas semánticas correctas.
+  - contraste de color suficiente y tamaños de fuente legibles.
+  - navegación completa por teclado.
+- Propón añadir pruebas automatizadas de accesibilidad a nivel de componente y de página cuando sea posible.
+
+### Testing móvil (cuando se trate de apps móviles)
+
+- Asume Appium u otro framework estándar cuando el proyecto tenga apps nativas/híbridas, salvo que el usuario especifique otro.
+- Ten en cuenta:
+  - múltiples tamaños de pantalla, versiones de SO y fabricantes.
+  - condiciones de red variables (offline, 3G, 4G, Wi-Fi).
+- Incluye pruebas de:
+  - instalación/actualización, permisos y comportamiento en segundo plano.
+  - rendimiento (uso de memoria, batería, tiempos de arranque).
+- Propón revisar y endurecer temas de seguridad móvil (almacenamiento seguro, comunicaciones cifradas, manejo de credenciales).
+
+### Flujo de trabajo y CI/CD
+
+- Siempre que generes un plan de pruebas, ten en cuenta su integración en CI/CD:
+  - tests de unidad y API en cada commit/push.
+  - subset de UI/visual en ramas principales o antes de releases.
+- Recomienda que el proyecto pueda ejecutar toda la suite con un solo comando (p. ej. `mvn test`, `pnpm test`, `pytest`, etc.).
+- Sugiere capturas de pantalla, logs y artefactos de fallo claros para facilitar depuración.
+
+### Pruebas específicas y herramientas de soporte
+
+- Exploración manual: buscar flujos nuevos y fallos no descritos; usar análisis de valores límite, partición de clases y adivinación de errores basada en experiencia.
+- Visuales: validar diseño/colores/tamaños y responsividad; usar BackstopJS (CLI, pixel a pixel) o Applitools Eyes para reducir mantenimiento.
+- Rendimiento:
+  - Backend: JMeter o Gatling con cargas realistas (ramp-up, steady state, ritmo).
+  - Frontend: Lighthouse o WebPageTest para métricas como FCP/TTI; recordar que renderizado frontend suele ser 80-90 % del tiempo total.
+- Móviles: cubrir ~85 % de mercado objetivo por SO/dispositivo; preferir dispositivos reales para release; usar limitador de red (ej. Android Emulator) para 2G/3G/4G; Appium para UI multiplataforma.
+
+### Pruebas continuas en CI/CD/CT
+
+- Bucle 1 (build + micropruebas): compilar y ejecutar unitarias, integración y SAST/SCA en cada commit (minutos).
+- Bucle 2 (humos de aceptación): desplegar a entorno de CI y ejecutar UI/API macro para flujos críticos en cada commit (<1 hora).
+- Bucle 3 (regresión completa/CFR): regresión total, DAST (OWASP ZAP), soak y performance completo de API/frontend + análisis de arquitectura (ArchUnit/JDepend) en regresión nocturna o bajo disparo manual.
+- Métricas DORA: monitorear y reportar lead time, frecuencia de despliegue, MTTR y % de cambios fallidos para apuntar a nivel “Élite”.
+
+### Estilo de interacción con el usuario
+
+- Explica cada propuesta de test brevemente: qué cubre, por qué es importante y qué nivel (unidad/API/UI).
+- Si el usuario pide "toda la cobertura posible", prioriza por riesgo y uso real antes de listar combinaciones exhaustivas.
+- Nunca inventes resultados de tests reales; solo puedes razonar hipotéticamente salvo que el usuario te dé logs o salidas concretas.
+
+### Metáfora
+
+Las pruebas de pila completa son como construir un rascacielos: no basta con revisar los acabados (UI), hay que garantizar la solidez de cada viga (unitarias e integración) y la calidad de materiales y planos desde el inicio (shift-left).

@@ -1,0 +1,140 @@
+---
+description: SOLID principles and architectural patterns
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+# Architecture Standards
+
+## SOLID Principles
+
+**Rule**: Code must follow SOLID principles and proper module boundaries.
+
+## Single Responsibility Principle
+
+Each module has one reason to change.
+
+**Example**:
+
+```typescript
+// ❌ Violates Single Responsibility
+class User {
+  save() {
+    /* DB logic */
+  }
+  sendEmail() {
+    /* Email logic */
+  }
+  validate() {
+    /* Validation logic */
+  }
+}
+
+// ✅ Separated concerns
+class User {
+  validate() {
+    /* Validation only */
+  }
+}
+
+class UserRepository {
+  save(user: User) {
+    /* Persistence only */
+  }
+}
+
+class EmailService {
+  send(user: User) {
+    /* Email only */
+  }
+}
+```
+
+## Open/Closed Principle
+
+Extend via composition, not modification.
+
+**Example**:
+
+```typescript
+// ❌ Modifies existing class
+class PaymentProcessor {
+  process(amount: number) {
+    // Original logic
+  }
+}
+
+// Later: need to add logging
+class PaymentProcessor {
+  process(amount: number) {
+    console.log('Processing...'); // Modified existing
+    // Original logic
+  }
+}
+
+// ✅ Extends via composition
+class PaymentProcessor {
+  constructor(private logger?: Logger) {}
+  process(amount: number) {
+    this.logger?.log('Processing...');
+    // Original logic unchanged
+  }
+}
+```
+
+## Dependency Inversion
+
+Depend on abstractions, not concretions.
+
+**Example**:
+
+```typescript
+// ❌ Depends on concrete implementation
+class UserService {
+  private db = new MySQLDatabase();
+  save(user: User) {
+    this.db.save(user);
+  }
+}
+
+// ✅ Depends on abstraction
+interface Database {
+  save(entity: unknown): Promise<void>;
+}
+
+class UserService {
+  constructor(private db: Database) {}
+  async save(user: User) {
+    await this.db.save(user);
+  }
+}
+```
+
+## Module Boundaries
+
+**Rule**: No circular dependencies between layers.
+
+**Layers**:
+- Presentation → Business → Data
+- Higher layers can import lower layers
+- Lower layers cannot import higher layers
+
+**Tool**: Use `madge` to detect circular dependencies:
+
+```bash
+madge --extensions ts,tsx,js,jsx --circular .
+```
+
+**Target**: Zero circular dependencies.
+
+## Dependency Graph
+
+Generate dependency graph:
+
+```bash
+madge --extensions ts,tsx,js,jsx --image graph.svg .
+```
+
+**Review**:
+- Identify import chains exceeding 5 levels
+- Document architectural layers
+- Flag violations of layer boundaries

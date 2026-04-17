@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      { "command": ".cursor/hooks/after-edit-lint.sh", "timeout": 15 },
+      { "command": ".cursor/hooks/after-edit-console-warn.sh", "timeout": 5 }
+    ],
+    "beforeShellExecution": [
+      { "command": ".cursor/hooks/before-shell-guard.sh", "timeout": 5 }
+    ],
+    "afterShellExecution": [
+      { "command": ".cursor/hooks/after-shell-pr.sh", "timeout": 5 }
+    ],
+    "stop": [{ "command": ".cursor/hooks/stop-console-audit.sh", "timeout": 10 }]
+  }
+}

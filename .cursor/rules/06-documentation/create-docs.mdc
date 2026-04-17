@@ -1,0 +1,340 @@
+---
+description: Documentation creation standards and templates
+globs: ['**/*.md', '**/*.mdx', 'docs/**', '**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+
+# Documentation Creation Standards
+
+## Core Rule
+
+**Rule**: All components, features, and APIs must have comprehensive, clear documentation.
+
+## Documentation Types
+
+### 1. Component Documentation
+
+**Location**: `docs/components/<component-name>.md`
+
+**Template**:
+```markdown
+# ComponentName
+
+## Overview
+
+Brief 1-2 paragraph overview explaining purpose and value.
+
+## Usage
+
+\`\`\`tsx
+import { ComponentName } from '@/components/ComponentName';
+
+function Example() {
+  return (
+    <ComponentName
+      prop1="value"
+      prop2={42}
+      onAction={handleAction}
+    />
+  );
+}
+\`\`\`
+
+## Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| prop1 | string | Yes | - | Description of prop1 |
+| prop2 | number | No | 0 | Description of prop2 |
+| onAction | (value: string) => void | No | - | Callback when action occurs |
+
+## Examples
+
+### Basic Usage
+\`\`\`tsx
+<ComponentName prop1="example" />
+\`\`\`
+
+### Advanced Usage
+\`\`\`tsx
+<ComponentName
+  prop1="example"
+  prop2={100}
+  onAction={(value) => console.log(value)}
+/>
+\`\`\`
+
+## Behavior
+
+- Handles user interactions
+- Validates input automatically
+- Shows error states when invalid
+
+## Error Handling
+
+- Throws `ValidationError` when prop1 is empty
+- Logs warnings for deprecated props
+
+## Accessibility
+
+- Keyboard navigation supported
+- ARIA labels included
+- Screen reader compatible
+
+## Related Components
+
+- [RelatedComponent](./related-component.md)
+- [ParentComponent](./parent-component.md)
+```
+
+### 2. API Documentation
+
+**Location**: `docs/api/<endpoint-name>.md`
+
+**Template**:
+```markdown
+# API: /api/users
+
+## Overview
+
+Manages user resources.
+
+## Endpoints
+
+### GET /api/users
+
+Retrieve list of users.
+
+**Request**:
+\`\`\`http
+GET /api/users?page=1&limit=10
+Authorization: Bearer <token>
+\`\`\`
+
+**Query Parameters**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| page | number | No | Page number (default: 1) |
+| limit | number | No | Items per page (default: 10) |
+
+**Response**:
+\`\`\`json
+{
+  "data": [
+    {
+      "id": "123",
+      "email": "user@example.com",
+      "name": "John Doe"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 100
+  }
+}
+\`\`\`
+
+**Status Codes**:
+- `200 OK`: Success
+- `401 Unauthorized`: Missing or invalid token
+- `500 Internal Server Error`: Server error
+
+## Error Responses
+
+\`\`\`json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid query parameters",
+    "details": {
+      "page": "Must be a positive integer"
+    }
+  }
+}
+\`\`\`
+```
+
+### 3. Architecture Decision Records (ADR)
+
+**Location**: `docs/architecture/decisions/ADR-<number>.md`
+
+**Template**:
+```markdown
+# ADR-001: Use TypeScript for Type Safety
+
+## Status
+
+Accepted
+
+## Context
+
+We need to improve code quality and reduce runtime errors.
+
+## Decision
+
+We will use TypeScript with strict mode enabled.
+
+## Consequences
+
+### Positive
+- Compile-time type checking
+- Better IDE support
+- Improved code documentation
+
+### Negative
+- Additional build step
+- Learning curve for team
+- Migration effort for existing code
+
+## Alternatives Considered
+
+1. JavaScript with JSDoc - Less type safety
+2. Flow - Less ecosystem support
+```
+
+## Documentation Process
+
+**Rule**: Follow this process when creating documentation.
+
+**Steps**:
+1. **Analyze code**: Read source files thoroughly
+2. **Identify interfaces**: Document all public APIs/props
+3. **Extract behavior**: Document expected behaviors and edge cases
+4. **Write examples**: Include working code examples
+5. **Add diagrams**: Use Mermaid for complex flows (see `mermaid.mdc`)
+6. **Review standards**: Ensure compliance with project standards
+7. **Validate**: Check links, code examples, and formatting
+
+## Code Documentation (JSDoc/TSDoc)
+
+**Rule**: Document all public functions, classes, and interfaces.
+
+**Example**:
+```typescript
+/**
+ * Calculates the total price including tax.
+ *
+ * @param subtotal - The subtotal amount before tax
+ * @param taxRate - The tax rate as a decimal (e.g., 0.08 for 8%)
+ * @returns The total price including tax
+ * @throws {ValidationError} If subtotal is negative or taxRate is invalid
+ *
+ * @example
+ * ```ts
+ * const total = calculateTotal(100, 0.08);
+ * console.log(total); // 108
+ * ```
+ */
+export function calculateTotal(
+  subtotal: number,
+  taxRate: number
+): number {
+  if (subtotal < 0) {
+    throw new ValidationError('Subtotal must be positive');
+  }
+  if (taxRate < 0 || taxRate > 1) {
+    throw new ValidationError('Tax rate must be between 0 and 1');
+  }
+  return subtotal * (1 + taxRate);
+}
+```
+
+**Reference**: https://tsdoc.org/
+
+## Documentation Sections
+
+### Required Sections
+
+1. **Overview**: Purpose and value proposition
+2. **Usage**: How to use with examples
+3. **API/Props/Parameters**: Detailed interface specification
+4. **Examples**: Real-world usage examples
+5. **Error Handling**: How errors are handled
+6. **Related**: Links to related documentation
+
+### Optional Sections (when applicable)
+
+- **Component Hierarchy**: Structure and relationships
+- **State Management**: State flow and management
+- **Performance Considerations**: Optimization notes
+- **Accessibility**: Accessibility features
+- **Testing**: How to test the component/feature
+- **Migration Guide**: For breaking changes
+
+## File Organization
+
+**Rule**: Organize documentation in a clear structure.
+
+**Structure**:
+```
+docs/
+├── README.md                    # Project overview
+├── architecture/
+│   ├── overview.md             # System architecture
+│   └── decisions/              # ADRs
+├── api/
+│   └── <endpoint>.md           # API documentation
+├── components/
+│   └── <component>.md         # Component documentation
+├── guides/
+│   └── <guide-name>.md         # How-to guides
+└── diagrams/
+    └── <diagram>.md            # Mermaid diagrams
+```
+
+## Writing Guidelines
+
+### Clarity
+
+**Rule**: Write for clarity and actionability.
+
+**Guidelines**:
+- ✅ Use active voice: "The function returns..." not "It is returned by..."
+- ✅ Be specific: "Validates email format" not "Validates input"
+- ✅ Include examples for every concept
+- ✅ Use code blocks for all code examples
+- ❌ Avoid jargon without explanation
+- ❌ Don't assume prior knowledge
+
+### Examples
+
+**Rule**: Every feature must have at least one working example.
+
+**Format**:
+```markdown
+## Example: Basic Usage
+
+\`\`\`tsx
+import { Button } from '@/components/Button';
+
+function App() {
+  return <Button onClick={() => alert('Clicked!')}>Click me</Button>;
+}
+\`\`\`
+```
+
+### Links and References
+
+**Rule**: Link to related documentation and external resources.
+
+**Format**:
+```markdown
+See also:
+- [Related Component](./related-component.md)
+- [API Reference](./api/users.md)
+- [External Documentation](https://example.com/docs)
+```
+
+## Maintenance
+
+**Rule**: Keep documentation up to date with code changes.
+
+**Checklist**:
+- [ ] Update docs when API changes
+- [ ] Update examples when behavior changes
+- [ ] Remove outdated information
+- [ ] Verify all links work
+- [ ] Test code examples
+
+**Reference**: Include in PR review checklist (see `development-workflows/pr-review.mdc`)

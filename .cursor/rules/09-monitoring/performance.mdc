@@ -1,0 +1,39 @@
+---
+description: 'Agent performance: context window management, task complexity routing, and build troubleshooting'
+alwaysApply: false
+---
+
+# Agent performance
+
+## Context window management
+
+Avoid the last 20% of context window for:
+
+- Large-scale refactoring
+- Feature implementation spanning multiple files
+- Debugging complex interactions
+
+Lower context sensitivity tasks:
+
+- Single-file edits
+- Independent utility creation
+- Documentation updates
+- Simple bug fixes
+
+## Task complexity routing
+
+For complex tasks requiring deep reasoning:
+
+1. Use Plan Mode for structured approach
+2. Break into smaller sub-tasks
+3. Use parallel agents for independent work
+4. Verify after each step
+
+## Build troubleshooting
+
+If build fails:
+
+1. Analyze error messages
+2. Fix incrementally (one error at a time)
+3. Verify after each fix
+4. If same error persists 4+ times, search online for solutions

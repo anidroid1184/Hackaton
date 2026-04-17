@@ -1,0 +1,185 @@
+---
+description: Commit workflow with conventional commits and pre-commit checks
+globs: ['.git/**', 'COMMIT_EDITMSG', '**/*.md']
+alwaysApply: false
+---
+
+# Commit Workflow
+
+## Core Rule
+
+**Rule**: All commits must follow conventional commit format with emojis and pass pre-commit checks.
+
+## Commit Format
+
+**Format**: `<emoji> <type>(<scope>): <description>`
+
+**Example**: `✨ feat(auth): add OAuth2 login support`
+
+## Commit Types
+
+| Emoji | Type | Use Case |
+|-------|------|----------|
+| ✨ | `feat` | New features |
+| 🐛 | `fix` | Bug fixes |
+| 📝 | `docs` | Documentation changes |
+| ♻️ | `refactor` | Code restructuring without changing functionality |
+| 🎨 | `style` | Code formatting, missing semicolons, etc. |
+| ⚡️ | `perf` | Performance improvements |
+| ✅ | `test` | Adding or correcting tests |
+| 🧑‍💻 | `chore` | Tooling, configuration, maintenance |
+| 🚧 | `wip` | Work in progress |
+| 🔥 | `remove` | Removing code or files |
+| 🚑 | `hotfix` | Critical fixes |
+| 🔒 | `security` | Security improvements |
+
+## Pre-commit Checks
+
+**Rule**: All commits must pass pre-commit checks before execution.
+
+**Required Checks** (in order):
+1. `pnpm verify` - Dependency integrity
+2. `tsc --noEmit` - TypeScript compilation
+3. `pnpm lint` - ESLint linting
+4. `pnpm format:check` - Prettier formatting
+5. `pnpm test` - Unit/integration tests
+
+**Reference**: `.husky/pre-commit` hook configuration.
+
+**Skip Checks** (use sparingly):
+```bash
+git commit --no-verify
+```
+
+**Warning**: Only skip checks for emergency hotfixes or documentation-only changes.
+
+## Commit Message Structure
+
+### Basic Format
+
+```
+<emoji> <type>(<scope>): <description>
+```
+
+### With Body (for complex changes)
+
+```
+<emoji> <type>(<scope>): <description>
+
+<explanation of why, not just what>
+
+Closes #123
+```
+
+### Examples
+
+**Simple feature**:
+```
+✨ feat(auth): add OAuth2 login support
+```
+
+**Bug fix with issue reference**:
+```
+🐛 fix(api): handle null user response
+
+Prevents crash when user data is missing from database.
+Adds null check before accessing user properties.
+
+Fixes #456
+```
+
+**Refactoring with context**:
+```
+♻️ refactor(payment): extract validation logic
+
+Moves validation to separate service to improve testability
+and reduce cyclomatic complexity from 15 to 5.
+```
+
+## Scope Guidelines
+
+**Rule**: Use scopes to indicate the module/area affected.
+
+**Common Scopes**:
+- `(auth)` - Authentication module
+- `(api)` - API layer
+- `(ui)` - User interface components
+- `(deps)` - Dependencies updates
+- `(tests)` - Testing infrastructure
+- `(config)` - Configuration files
+- `(docs)` - Documentation
+
+**Task Integration**: When working with PBIs/Tasks:
+- Format: `<emoji> <type>(<task-id>): <description>`
+- Example: `✨ feat(PBI-001-T01): implement user authentication`
+- PR Title: `[PBI-001-T01] Add user authentication feature`
+
+## Best Practices
+
+### Atomic Commits
+
+**Rule**: One logical change per commit.
+
+**Example**:
+```bash
+# ❌ Bad: Multiple unrelated changes
+✨ feat: add login and update dependencies
+
+# ✅ Good: Separate commits
+✨ feat(auth): add login functionality
+🧑‍💻 chore(deps): update react to v18.2.0
+```
+
+### Imperative Mood
+
+**Rule**: Use imperative mood in commit messages.
+
+**Examples**:
+- ✅ "Add feature" (not "Added feature")
+- ✅ "Fix bug" (not "Fixed bug")
+- ✅ "Update documentation" (not "Updated documentation")
+
+### Explain Why
+
+**Rule**: For complex changes, explain the reasoning in the commit body.
+
+**Example**:
+```
+♻️ refactor(api): migrate to async/await
+
+Replaces Promise chains with async/await for better readability
+and error handling. Reduces nesting from 4 levels to 2.
+```
+
+### Reference Issues
+
+**Rule**: Link to issues/PRs when relevant.
+
+**Format**: `Closes #123`, `Fixes #456`, `Refs #789`
+
+## Conventional Commits Reference
+
+Follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/):
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+## Git Workflow Integration
+
+**Reference**: `.cursorrules` section 2 (Work Item Management)
+
+**Branch Naming**: `feat/<task-id>`, `fix/<issue-description>`, `chore/<description>`
+
+**Commit Command**:
+```bash
+# Standard commit (runs all checks)
+git commit -m "✨ feat(auth): add OAuth2 login"
+
+# Skip checks (emergency only)
+git commit --no-verify -m "🚑 hotfix(api): fix critical auth bug"
+```

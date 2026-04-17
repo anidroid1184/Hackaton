@@ -1,0 +1,44 @@
+---
+alwaysApply: false
+---
+## Backend & API Standards
+
+### 1. Naming & Structure
+- **Endpoints**: Use kebab-case resource names (`/users`, `/blog-posts`).
+- **HTTP Verbs**: GET (read), POST (create), PUT/PATCH (update), DELETE (remove).
+- **Plural resources**; single resource access via `/users/{id}`.
+
+### 2. Versioning
+- URI versioning preferred: `/v1/`, `/v2/`.  Avoid breaking changes inside a version.
+- Document deprecation schedule.
+
+### 3. Query Parameters
+- Pagination: `?page=1&limit=25` or cursor-based (`?cursor=abc`).
+- Filtering: `?status=active&role=admin`.
+- Sorting: `?sort=-createdAt` (minus for DESC).
+
+### 4. Error Handling
+- Standard JSON error envelope:
+```json
+{
+  "error": {
+    "code": "USER_NOT_FOUND",
+    "message": "User id not found",
+    "details": {}
+  }
+}
+```
+- Map to HTTP status codes (4xx client, 5xx server).
+
+### 5. Validation
+- Validate request bodies & params (e.g., `zod`, `Joi`).
+- Return `422 Unprocessable Entity` for validation failures.
+
+### 6. Documentation
+- Maintain OpenAPI / Swagger spec in `api/openapi.yaml`.
+- CI validates spec vs implementation.
+
+### 7. GraphQL Specifics
+- Only expose nouns (types) and verbs as mutations.
+- Version via schema deprecation (`@deprecated`) annotations.
+- Always paginate connection fields using Relay-style connections.

@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Skills: escaneo de confianza sin ruido
+
+Al **añadir o cambiar** una carpeta de skill (p. ej. `.claude/skills/<name>/`):
+
+1. Ejecutar **`skill-trust-audit` en modo ligero**: `rg`/grep sobre **esa carpeta** según el SKILL; **no** volcar archivos enteros al contexto.
+2. Responder con el **veredicto mínimo** (≤8 líneas) del SKILL salvo Crítico/Alto.
+3. **Crítico/Alto** → avisar y no dar por cerrada la instalación sin el usuario.
+
+No auditar skills en tareas que **no** toquen skills. No repetir el checklist largo en el chat.

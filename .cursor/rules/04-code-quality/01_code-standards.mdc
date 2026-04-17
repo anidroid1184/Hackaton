@@ -1,0 +1,137 @@
+---
+description: Core code quality standards and conventions (JS/TS). Python/Ruff/Mypy en docs/CONVENTIONS.md.
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+# Code Quality Standards
+
+## Package Management
+
+**Rule**: Use `pnpm` exclusively for package management.
+
+**Actions**:
+- ✅ Install: `pnpm install`
+- ✅ Verify: `pnpm verify` (runs before CI)
+- ✅ Add package: `pnpm add <package> --save-exact`
+- 🚫 Never use `npm install`, `yarn install`, or `npm ci`
+
+**Reference**: `package.json` must include `"packageManager": "pnpm@<version>"`.
+
+## TypeScript Type Safety
+
+**Rule**: All code must be strictly typed with zero `any` types.
+
+**Actions**:
+- ✅ Enable strict mode: `tsconfig.json` → `"strict": true`
+- ✅ Type all function parameters and return values
+- ✅ Use `unknown` instead of `any` when type is truly unknown
+- ✅ Run type check: `pnpm typecheck` or `tsc --noEmit`
+- 🚫 Never use `any`, `@ts-ignore`, or `@ts-expect-error` without justification
+
+**Examples**:
+
+```typescript
+// ❌ Unacceptable
+function processData(data: any) {
+  return data.value;
+}
+
+// ✅ Acceptable with generics
+function processData<T extends { value: unknown }>(data: T): T['value'] {
+  return data.value;
+}
+
+// ✅ When type is truly unknown
+function processData(data: unknown): number {
+  if (typeof data === 'object' && data !== null && 'value' in data) {
+    return Number(data.value);
+  }
+  throw new Error('Invalid data');
+}
+```
+
+**Reference**: Configure `tsconfig.json` with strict preset.
+
+## Import Organization
+
+**Rule**: Imports must be grouped and ordered consistently.
+
+**Order**:
+1. Node.js built-ins (`fs`, `path`, `crypto`)
+2. Third-party packages (`react`, `lodash`, `axios`)
+3. Internal absolute imports (`@/components`, `@/utils`)
+4. Relative imports (`./Component`, `../utils`)
+
+**Example**:
+
+```typescript
+// ✅ Correct order
+import fs from 'fs';
+import path from 'path';
+import React from 'react';
+import { Button } from '@mui/material';
+import { apiClient } from '@/lib/api';
+import { formatDate } from '@/utils/date';
+import { UserCard } from './UserCard';
+import styles from './styles.module.css';
+```
+
+**Reference**: Configure ESLint rule `import/order` with this pattern.
+
+## Constants and Immutability
+
+**Rule**: Values used more than once must be named constants.
+
+**Example**:
+
+```typescript
+// ❌ Magic numbers
+if (user.age > 18 && user.age < 65) {
+  // ...
+}
+
+// ✅ Named constants
+const MIN_AGE = 18;
+const MAX_AGE = 65;
+if (user.age > MIN_AGE && user.age < MAX_AGE) {
+  // ...
+}
+```
+
+**Immutability**: Mark immutable variables with `const` or `readonly`.
+
+```typescript
+// ✅ Immutable
+const API_URL = 'https://api.example.com';
+const config = { apiUrl: API_URL } as const;
+
+// ❌ Mutable when not needed
+let apiUrl = 'https://api.example.com';
+```
+
+## Code Complexity
+
+**Rule**: Avoid deeply nested ternaries; use helper functions.
+
+**Example**:
+
+```typescript
+// ❌ Nested ternary
+const status = user.isActive
+  ? user.isPremium
+    ? 'premium-active'
+    : 'active'
+  : 'inactive';
+
+// ✅ Helper function
+function getUserStatus(user: User): string {
+  if (!user.isActive) return 'inactive';
+  return user.isPremium ? 'premium-active' : 'active';
+}
+```
+
+## File Size Limits
+
+**Rule**: Keep files under 300 lines and functions under 50 lines.
+
+**Action**: Split large files into focused modules following Single Responsibility Principle.

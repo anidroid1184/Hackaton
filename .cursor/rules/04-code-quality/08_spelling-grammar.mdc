@@ -1,0 +1,92 @@
+---
+description: Spelling and grammar standards for code and documentation
+alwaysApply: false
+---
+# Spelling & Grammar
+
+## Core Rule
+
+**Rule**: All comments, documentation, variable names, commit messages, and user-visible text must be free of spelling or grammatical errors.
+
+## Scope
+
+**Applies to**:
+
+- Code comments
+- Documentation files (`.md`, `.mdx`)
+- Variable and function names
+- Commit messages
+- User-facing text (UI labels, error messages)
+- API documentation
+
+## Examples
+
+### Code Comments
+
+```typescript
+// ❌ Spelling error
+// Calcuate the total
+function calculateTotal(items: Item[]) {
+  // ...
+}
+
+// ✅ Correct spelling
+// Calculate the total
+function calculateTotal(items: Item[]) {
+  // ...
+}
+```
+
+### Variable Names
+
+```typescript
+// ❌ Misspelled variable
+const usrName = 'John';
+
+// ✅ Correct spelling
+const userName = 'John';
+```
+
+### Commit Messages
+
+```bash
+# ❌ Grammar error
+feat: add new feture for user auth
+
+# ✅ Correct
+feat: add new feature for user authentication
+```
+
+## Project-Specific Terms
+
+**Rule**: Project-specific technical terms can be added to a custom dictionary.
+
+**Actions**:
+
+- Add domain-specific terms to `.vscode/settings.json` or `.cspell.json`
+- Use consistent terminology across the codebase
+- Document abbreviations and acronyms
+
+**Example** (`.cspell.json`):
+
+```json
+{
+  "version": "0.2",
+  "language": "en",
+  "words": ["pnpm", "Turborepo", "PBI", "PRD"]
+}
+```
+
+## Tools
+
+**Recommended**: Use spell checkers in your editor:
+
+- VS Code: Code Spell Checker extension
+- Spell check in CI: `cspell` or `typos`
+
+**CI Integration**:
+
+```bash
+# Check spelling in CI
+npx cspell "**/*.{ts,tsx,js,jsx,md}"
+```

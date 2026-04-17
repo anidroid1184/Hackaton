@@ -1,0 +1,269 @@
+---
+description: Comprehensive pull request review checklist from multiple perspectives
+globs: ['**/*.md', '.github/**']
+alwaysApply: false
+---
+
+# Pull Request Review
+
+## Core Rule
+
+**Rule**: All PRs must be reviewed from multiple perspectives before merge.
+
+**Principle**: Improvements scheduled for "later" must be addressed NOW.
+
+## Review Process
+
+**Steps**:
+
+1. Read PR description and linked issues
+2. Identify code owners for changed files using CodeScene `code_ownership_for_path` (if MCP available and project configured)
+3. Review code changes systematically (file by file)
+4. Test functionality locally if applicable
+5. Consider each perspective below
+6. Leave constructive, specific feedback
+7. Approve or request changes with clear action items
+
+## Review Perspectives
+
+### 1. Product Manager Review
+
+**Focus**: Business value and user experience.
+
+**Checklist**:
+
+- [ ] Does this deliver promised value?
+- [ ] Will users benefit from this change?
+- [ ] Does it align with product goals?
+- [ ] Are all requirements met?
+- [ ] Is the feature complete (no TODOs)?
+
+**Action**: Provide directives for maximum business impact.
+
+**Example Feedback**:
+
+```
+✅ Business value is clear - this reduces user onboarding time by 50%.
+⚠️ Missing: User feedback collection mechanism mentioned in requirements.
+```
+
+### 2. Developer Review
+
+**Focus**: Code quality and maintainability.
+
+**Checklist**:
+
+- [ ] Code follows project conventions (see `code-quality/` rules)
+- [ ] SOLID principles applied
+- [ ] DRY/KISS principles respected
+- [ ] No magic numbers (use named constants)
+- [ ] Functions < 50 lines, files < 300 lines
+- [ ] Cyclomatic complexity < 10 per function
+- [ ] Proper error handling (see `03_error-handling.mdc`)
+- [ ] No nested ternaries (max 2 levels)
+- [ ] TypeScript strict mode compliance
+- [ ] No `any` types without justification
+- [ ] CodeScene `code_health_review` score >= 6.0 on changed files (run via MCP if available)
+
+**Action**: Suggest specific code improvements with examples. Run `code_health_review` on each changed file to get a structured breakdown of code smells.
+
+**Example Feedback**:
+
+```
+✅ Clean separation of concerns.
+⚠️ Line 42: Extract magic number 86400 to constant SECONDS_PER_DAY.
+⚠️ Function `processOrder` has complexity 12 - consider splitting.
+⚠️ CodeScene Code Health: 5.2 (yellow) - Bumpy Road Ahead in processOrder.
+```
+
+**Reference**: `code-quality/01_code-standards.mdc`, `code-quality/04_code-architecture.mdc`, `code-quality/09_codescene-code-health.mdc`
+
+### 3. Quality Engineer Review
+
+**Focus**: Test coverage and edge cases.
+
+**Checklist**:
+
+- [ ] All code paths tested (>80% coverage for critical paths)
+- [ ] Edge cases handled
+- [ ] Error paths tested
+- [ ] Boundary conditions tested (null, empty, max values)
+- [ ] Integration tests for API changes
+- [ ] No `.skip()` or `.only()` in committed tests
+- [ ] Test names are descriptive
+- [ ] Regression risk assessed
+
+**Action**: Identify missing tests and scenarios.
+
+**Example Feedback**:
+
+```
+✅ Good coverage of happy path.
+⚠️ Missing: Test for null user input (line 15).
+⚠️ Missing: Test for network timeout scenario.
+```
+
+**Reference**: `code-quality/07_code-testing.mdc`
+
+### 4. Security Engineer Review
+
+**Focus**: Security vulnerabilities and data protection.
+
+**Checklist**:
+
+- [ ] Input validation implemented (Zod/Yup schemas)
+- [ ] XSS prevention (DOMPurify for user content)
+- [ ] SQL injection prevention (parameterized queries)
+- [ ] No secrets in code (use environment variables)
+- [ ] Authentication/authorization checks present
+- [ ] HTTPS used for all network requests
+- [ ] CORS configured with strict allowlist
+- [ ] Security headers configured
+
+**Action**: Flag security concerns immediately - block merge if critical.
+
+**Example Feedback**:
+
+```
+🚨 CRITICAL: Line 23 - User input directly concatenated in SQL query.
+✅ Good: Input validation with Zod schema.
+```
+
+**Reference**: `10-security/security.mdc`
+
+### 5. DevOps Review
+
+**Focus**: CI/CD and deployment readiness.
+
+**Checklist**:
+
+- [ ] CI pipeline passes all checks
+- [ ] Build succeeds locally (`pnpm build`)
+- [ ] Environment variables documented (`.env.example`)
+- [ ] No hardcoded configuration values
+- [ ] Database migrations included (if applicable)
+- [ ] Rollback plan documented
+- [ ] Monitoring/logging added for new features
+- [ ] Performance impact assessed
+- [ ] Codacy `codacy_cli_analyze` passes on changed files (no new linting/security issues)
+- [ ] CodeScene `pre_commit_code_health_safeguard` quality gate passes (no health degradation)
+
+**Action**: Ensure smooth deployment.
+
+**Example Feedback**:
+
+```
+✅ CI passes all checks.
+⚠️ Missing: Environment variable `API_KEY` not documented in .env.example.
+```
+
+### 6. UI/UX Designer Review
+
+**Focus**: Visual consistency and accessibility.
+
+**Checklist**:
+
+- [ ] Matches design system/component library
+- [ ] Responsive on mobile/tablet/desktop
+- [ ] Accessibility standards met (WCAG 2.1 AA minimum)
+- [ ] All form inputs have associated labels
+- [ ] Keyboard navigation works
+- [ ] Color contrast meets standards
+- [ ] Loading states and error messages clear
+
+**Action**: Ensure delightful user experience.
+
+**Example Feedback**:
+
+```
+✅ Matches design system.
+⚠️ Input on line 45 missing `htmlFor` label association.
+⚠️ Color contrast ratio 3.2:1 - needs to be 4.5:1 for AA compliance.
+```
+
+## Code Review Checklist
+
+**Reference**: Use this checklist for every code review.
+
+### Code Quality
+
+- [ ] SOLID principles applied
+- [ ] DRY / KISS respected
+- [ ] No nested ternary expressions (>2 levels)
+- [ ] Version consistency across packages
+- [ ] Descriptive constants used instead of magic numbers
+- [ ] Functions < 50 lines, files < 300 lines
+- [ ] Cyclomatic complexity < 10
+
+### Type Safety
+
+- [ ] TypeScript strict mode compliance
+- [ ] No `any` types without justification
+- [ ] All function parameters and returns typed
+
+### Error Handling
+
+- [ ] All async operations wrapped in try/catch
+- [ ] Errors logged with context
+- [ ] User-friendly error messages
+
+### Testing
+
+- [ ] Test coverage >80% for critical paths
+- [ ] All edge cases tested
+- [ ] Error paths tested
+- [ ] No `.skip()` or `.only()` in committed code
+
+### Security
+
+- [ ] Input validation implemented
+- [ ] No secrets in code
+- [ ] XSS/SQL injection prevention
+- [ ] HTTPS for all requests
+
+### Documentation
+
+- [ ] Code comments explain "why" not "what"
+- [ ] README updated if needed
+- [ ] API documentation updated
+
+## Definition of Done
+
+A PR is ready to merge when:
+
+- [ ] All review perspectives addressed
+- [ ] All tests pass
+- [ ] Code review approved
+- [ ] Documentation updated
+- [ ] CI pipeline passes
+- [ ] No blocking issues
+
+## Review Feedback Format
+
+**Structure**:
+
+```
+[Severity] [Location]: [Issue description]
+
+[Why it matters]
+
+[Specific fix suggestion]
+```
+
+**Severity Levels**:
+
+- 🚨 **CRITICAL**: Block merge (security, breaking changes)
+- ⚠️ **HIGH**: Should fix before merge (bugs, major issues)
+- 💡 **MEDIUM**: Nice to have (code quality improvements)
+- ✅ **APPROVED**: No issues found
+
+**Example**:
+
+```
+⚠️ Line 42: Magic number 86400 used
+
+This makes the code harder to understand and maintain.
+
+Fix: Extract to constant:
+const SECONDS_PER_DAY = 86400;
+```

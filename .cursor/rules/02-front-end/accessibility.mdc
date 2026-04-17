@@ -1,0 +1,166 @@
+---
+description: 'Accessibility (a11y) standards: WCAG 2.1 AA compliance, ARIA patterns, keyboard navigation, and screen reader support for React/Next.js components'
+alwaysApply: false
+globs:
+  - '**/*.tsx'
+  - '**/*.jsx'
+---
+
+# Accessibility Standards (WCAG 2.1 AA)
+
+## When to Use
+
+- Building or editing React/Next.js UI components
+- Reviewing frontend code for accessibility compliance
+- Creating forms, modals, navigation, or interactive elements
+
+## When NOT to Use
+
+- Backend-only code, API routes, scripts, or CLI tools
+
+## Core Rules
+
+### 1. Semantic HTML First
+
+Use native HTML elements before reaching for ARIA:
+
+```tsx
+// Bad: div with role
+<div role="button" onClick={handleClick}>Submit</div>
+
+// Good: native button
+<button onClick={handleClick}>Submit</button>
+```
+
+Prefer `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<header>`, `<footer>` over generic `<div>`.
+
+### 2. Form Labels
+
+Every input must have an associated label:
+
+```tsx
+// Bad: no label
+<input type="email" placeholder="Email" />
+
+// Good: explicit label
+<label htmlFor="email">Email</label>
+<input id="email" type="email" placeholder="user@example.com" />
+```
+
+### 3. Image Alt Text
+
+All `<img>` elements must have `alt`. Decorative images use `alt=""`:
+
+```tsx
+// Informative
+<img src="/logo.png" alt="Company logo" />
+
+// Decorative
+<img src="/divider.svg" alt="" role="presentation" />
+```
+
+### 4. Keyboard Navigation
+
+- All interactive elements must be reachable via Tab
+- Custom components need `tabIndex={0}` only if they are interactive and not natively focusable
+- Never use `tabIndex` > 0
+- Provide visible focus indicators (never `outline: none` without replacement)
+
+```tsx
+// Good: visible focus
+<button className='focus:ring-2 focus:ring-blue-500 focus:outline-none'>
+  Save
+</button>
+```
+
+### 5. ARIA When Needed
+
+Use ARIA only when semantic HTML is insufficient:
+
+```tsx
+// Toggle button
+<button aria-pressed={isActive} onClick={toggle}>
+  Dark Mode
+</button>
+
+// Live region for dynamic content
+<div aria-live="polite" role="status">
+  {statusMessage}
+</div>
+
+// Modal
+<dialog aria-modal="true" aria-labelledby="dialog-title">
+  <h2 id="dialog-title">Confirm Action</h2>
+</dialog>
+```
+
+### 6. Color Contrast
+
+- Normal text: minimum 4.5:1 contrast ratio
+- Large text (18px+ or 14px+ bold): minimum 3:1
+- UI components and icons: minimum 3:1
+
+### 7. Headings
+
+- One `<h1>` per page
+- Heading levels must not skip (h1 -> h3 without h2)
+- All headings must contain visible text or `aria-label`
+
+### 8. Error Messages
+
+Form errors must be programmatically associated:
+
+```tsx
+<label htmlFor="email">Email</label>
+<input
+  id="email"
+  type="email"
+  aria-invalid={!!error}
+  aria-describedby={error ? "email-error" : undefined}
+/>
+{error && <p id="email-error" role="alert">{error}</p>}
+```
+
+### 9. Skip Navigation
+
+Provide skip links for keyboard users:
+
+```tsx
+<a href='#main-content' className='sr-only focus:not-sr-only'>
+  Skip to main content
+</a>
+```
+
+### 10. Motion and Animation
+
+Respect user preferences:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+## Automated Testing
+
+- Use `eslint-plugin-jsx-a11y` for static analysis
+- Use `@axe-core/react` in development for runtime checks
+- Use Playwright `browser_snapshot` (accessibility tree) for integration testing
+
+## Checklist
+
+- [ ] All images have appropriate `alt` text
+- [ ] All form inputs have associated labels
+- [ ] Color contrast meets WCAG AA minimums
+- [ ] Keyboard navigation works for all interactive elements
+- [ ] Focus indicators are visible
+- [ ] Heading hierarchy is logical (no skipped levels)
+- [ ] ARIA attributes are used correctly (no redundant roles)
+- [ ] Error messages are programmatically linked to inputs
+- [ ] Dynamic content uses `aria-live` regions
+- [ ] Motion respects `prefers-reduced-motion`

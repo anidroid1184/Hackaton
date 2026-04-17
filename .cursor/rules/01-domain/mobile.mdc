@@ -1,0 +1,23 @@
+---
+alwaysApply: false
+---
+## Mobile / React Native Guidelines
+
+### Project Structure
+- Keep mobile code in `apps/mobile/` (Monorepo) or its own repo.
+- Use TypeScript throughout.
+
+### Styling
+- Use **StyleSheet.create** or Tailwind-RN; never inline magic numbers.
+- Leverage platform-specific files (`Component.ios.tsx`, `Component.android.tsx`).
+
+### Performance
+- Enable Hermes engine.
+- Use FlatList with keyExtractor for large lists.
+- Avoid anonymous functions in render paths.
+
+### Native Modules
+- Prefer community packages; if writing native code, follow repo's code style.
+
+### CI
+- Run E2E with Detox; build & test on both iOS and Android.

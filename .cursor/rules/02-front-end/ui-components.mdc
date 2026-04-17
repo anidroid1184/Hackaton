@@ -1,0 +1,281 @@
+---
+description: UI component patterns with TailwindCSS and shadcn/ui
+globs: ['components/**/*.tsx', 'app/**/*.tsx', 'src/components/**/*.tsx']
+alwaysApply: false
+---
+
+# UI Component Standards
+
+## Core Rule
+
+**Rule**: All UI components must follow TypeScript patterns, TailwindCSS conventions, and accessibility standards.
+
+## Component Structure
+
+**Rule**: Use typed props with default export and proper TypeScript interfaces.
+
+**Example**:
+
+```tsx
+import { cn } from '@/lib/utils';
+import React from 'react';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const variants = {
+  primary: 'bg-blue-600 text-white hover:bg-blue-700',
+  secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+  ghost: 'bg-transparent hover:bg-gray-100',
+};
+
+const sizes = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-base',
+  lg: 'px-6 py-3 text-lg',
+};
+
+export default function Button({
+  variant = 'primary',
+  size = 'md',
+  className,
+  children,
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        'rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500',
+        variants[variant],
+        sizes[size],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+```
+
+## TailwindCSS Conventions
+
+**Rule**: Use TailwindCSS utilities with `cn()` for conditional classes.
+
+### Class Merging
+
+**Use**: `cn()` utility from `clsx` + `tailwind-merge` for conditional classes.
+
+**Example**:
+
+```tsx
+import { cn } from '@/lib/utils';
+
+// ✅ Good: Conditional classes with cn()
+<div
+  className={cn(
+    'p-4 rounded-lg transition-colors',
+    isActive && 'bg-blue-500 text-white',
+    isDisabled && 'opacity-50 cursor-not-allowed'
+  )}
+/>
+
+// ❌ Bad: Inline styles
+<div style={{ padding: '16px', borderRadius: '8px' }} />
+```
+
+### Design Tokens
+
+**Rule**: Use Tailwind design tokens (spacing, colors) instead of arbitrary values.
+
+**Example**:
+
+```tsx
+// ✅ Good: Using design tokens
+<div className="p-4 bg-blue-600 text-white rounded-lg" />
+
+// ❌ Bad: Arbitrary values
+<div className="p-[16px] bg-[#2563eb] text-[#ffffff] rounded-[8px]" />
+```
+
+### Dark Mode
+
+**Rule**: Implement dark mode with `dark:` prefix.
+
+**Example**:
+
+```tsx
+<div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+  Content
+</div>
+```
+
+**Reference**: Configure `tailwind.config.js` with `darkMode: 'class'`.
+
+## Accessibility Requirements
+
+**Rule**: All interactive elements must be accessible.
+
+### Keyboard Support
+
+**Requirements**:
+- ✅ All interactive elements keyboard accessible
+- ✅ Focus indicators visible
+- ✅ Tab order logical
+
+**Example**:
+
+```tsx
+// ✅ Good: Accessible button with keyboard support
+<button
+  aria-label="Close modal"
+  onClick={onClose}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClose();
+    }
+  }}
+  className="focus:ring-2 focus:ring-blue-500 focus:outline-none"
+>
+  <XIcon aria-hidden="true" />
+</button>
+
+// ❌ Bad: Div as button (not keyboard accessible)
+<div onClick={onClose}>
+  <XIcon />
+</div>
+```
+
+### Semantic HTML
+
+**Rule**: Use semantic HTML elements.
+
+**Examples**:
+- `<button>` for buttons (not `<div>` with onClick)
+- `<nav>` for navigation
+- `<main>` for main content
+- `<header>`, `<footer>`, `<section>` for structure
+
+### ARIA Labels
+
+**Rule**: Provide ARIA labels for icon-only buttons and non-text content.
+
+**Example**:
+
+```tsx
+// ✅ Good: Icon-only button with aria-label
+<button aria-label="Delete item">
+  <TrashIcon aria-hidden="true" />
+</button>
+
+// ✅ Good: Form input with label
+<label htmlFor="email">Email</label>
+<input id="email" type="email" />
+```
+
+### Focus Management
+
+**Rule**: Ensure focus indicators are visible and logical.
+
+**Example**:
+
+```tsx
+<button className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+  Click me
+</button>
+```
+
+**Reference**: `code-quality/01_code-standards.mdc` for accessibility standards.
+
+## shadcn/ui Integration
+
+**Rule**: Use shadcn/ui components from `@/components/ui` directory.
+
+### Import Pattern
+
+**Example**:
+
+```tsx
+// ✅ Good: Import from components/ui
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+
+// Use as-is
+<Button variant="default">Click me</Button>
+
+// Or extend with composition
+interface SaveButtonProps extends React.ComponentProps<typeof Button> {
+  isLoading?: boolean;
+}
+
+export function SaveButton({ isLoading, ...props }: SaveButtonProps) {
+  return (
+    <Button variant="default" disabled={isLoading} {...props}>
+      {isLoading ? 'Saving...' : 'Save'}
+    </Button>
+  );
+}
+```
+
+### Component Extension
+
+**Rule**: Extend shadcn/ui components via composition, not modification.
+
+**Example**:
+
+```tsx
+// ✅ Good: Composition
+import { Button } from '@/components/ui/button';
+
+export function PrimaryButton(props: React.ComponentProps<typeof Button>) {
+  return <Button variant="default" {...props} />;
+}
+
+// ❌ Bad: Modifying source files
+// Don't edit @/components/ui/button.tsx directly
+```
+
+## Component Props Pattern
+
+**Rule**: Extend native HTML attributes for better TypeScript support.
+
+**Example**:
+
+```tsx
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string;
+  description?: string;
+}
+
+export function Card({ title, description, className, children, ...props }: CardProps) {
+  return (
+    <div className={cn('rounded-lg border p-6', className)} {...props}>
+      {title && <h3 className="text-lg font-semibold">{title}</h3>}
+      {description && <p className="text-sm text-gray-600">{description}</p>}
+      {children}
+    </div>
+  );
+}
+```
+
+## File Organization
+
+**Rule**: Organize components in a clear structure.
+
+**Structure**:
+```
+components/
+├── ui/              # shadcn/ui components
+│   ├── button.tsx
+│   └── dialog.tsx
+├── features/        # Feature-specific components
+│   └── auth/
+│       └── LoginForm.tsx
+└── shared/          # Shared components
+    └── Header.tsx
+```
+
+**Naming**: Use PascalCase for component files: `Button.tsx`, `UserCard.tsx`.

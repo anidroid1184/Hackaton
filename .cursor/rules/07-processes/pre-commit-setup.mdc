@@ -1,0 +1,254 @@
+---
+description: 'Reusable pre-commit setup: Husky + lint-staged + Trivy + CodeScene for any project'
+globs: ['.husky/**', 'package.json', '.lintstagedrc*', 'trivy.yaml']
+alwaysApply: false
+---
+
+# Pre-commit Setup Guide
+
+Reusable pre-commit hook structure for any JavaScript/TypeScript project. Combines Husky, lint-staged, Trivy, and CodeScene MCP into a single quality pipeline.
+
+## When to use this
+
+- Setting up a new project
+- Adding pre-commit hooks to an existing project
+- User asks for "quality gates", "pre-commit setup", or "automate checks"
+
+## Prerequisites
+
+- `pnpm` as package manager
+- `trivy` installed via winget (`winget install AquaSecurity.Trivy`)
+- CodeScene MCP enabled in Cursor settings
+
+---
+
+## Step 1: Install dependencies
+
+```bash
+pnpm add -D --save-exact husky lint-staged
+```
+
+## Step 2: Initialize Husky
+
+```bash
+pnpm exec husky init
+```
+
+This creates `.husky/` directory and adds `prepare` script to `package.json`.
+
+## Step 3: Configure lint-staged
+
+Add to `package.json`:
+
+```json
+{
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": ["prettier --write", "eslint --fix --max-warnings=0"],
+    "*.{json,md,yml,yaml,css,scss}": ["prettier --write"]
+  }
+}
+```
+
+Or create `.lintstagedrc.json` at project root:
+
+```json
+{
+  "*.{ts,tsx,js,jsx}": ["prettier --write", "eslint --fix --max-warnings=0"],
+  "*.{json,md,yml,yaml,css,scss}": ["prettier --write"]
+}
+```
+
+## Step 4: Create the pre-commit hook
+
+Write `.husky/pre-commit`:
+
+```bash
+#!/bin/sh
+
+# 1. Lint + Format staged files
+npx lint-staged
+
+# 2. TypeScript type check
+npx tsc --noEmit --pretty
+
+# 3. Trivy secret scan (fast, ~1-3s)
+trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .
+
+# 4. Run tests (skip if none exist)
+pnpm test --passWithNoTests 2>/dev/null || true
+```
+
+**On Windows (PowerShell)**: Husky hooks run through Git Bash (bundled with Git for Windows), so the `#!/bin/sh` format works even on Windows. No changes needed.
+
+## Step 5: Add npm scripts to package.json
+
+```json
+{
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "security:secrets": "trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .",
+    "security:deps": "trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .",
+    "security": "trivy fs --scanners vuln,secret --exit-code 1 --severity HIGH,CRITICAL .",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm security:secrets"
+  }
+}
+```
+
+## Step 6: Create Trivy config (optional)
+
+Create `trivy.yaml` at project root for custom configuration:
+
+```yaml
+# trivy.yaml - Project-level Trivy configuration
+severity:
+  - HIGH
+  - CRITICAL
+
+scan:
+  # Skip test files and build artifacts
+  skip-dirs:
+    - node_modules
+    - .next
+    - dist
+    - build
+    - coverage
+    - .git
+
+secret:
+  # Custom secret patterns to detect
+  config: ''
+
+vulnerability:
+  # Ignore specific CVEs if needed (document why)
+  ignorefile: .trivyignore
+```
+
+Create `.trivyignore` for known false positives:
+
+```
+# .trivyignore - Document each ignored CVE with reason and review date
+# Format: CVE-ID  # Reason (reviewed: YYYY-MM-DD)
+
+# Example:
+# CVE-2023-12345  # False positive in dev dependency, not in production (reviewed: 2026-02-07)
+```
+
+---
+
+## Pipeline Summary
+
+### Pre-commit (automatic, every commit)
+
+```
+git commit
+  ├── lint-staged (Prettier + ESLint on staged files) ... ~2-5s
+  ├── tsc --noEmit (TypeScript check) .................. ~3-10s
+  ├── trivy fs --scanners secret (secret scan) ......... ~1-3s
+  └── pnpm test (unit tests) ........................... ~5-15s
+```
+
+### Manual commands (run when needed)
+
+```bash
+pnpm security:deps    # Scan dependencies for vulnerabilities
+pnpm security         # Full security scan (secrets + deps)
+pnpm check            # Full quality check (lint + types + test + secrets)
+```
+
+### Cursor Agent (automatic via MCP, while editing)
+
+```
+After file edit:
+  ├── CodeScene code_health_score ...................... automatic
+  ├── If score < 6.0 → alert user
+  └── If score < 4.0 → offer auto-refactor
+
+Before commit (when agent commits):
+  └── CodeScene pre_commit_code_health_safeguard ....... all staged files
+```
+
+---
+
+## Adapting for different project types
+
+### Python projects
+
+Replace lint-staged config:
+
+```json
+{
+  "*.py": ["black", "isort", "flake8"]
+}
+```
+
+Pre-commit hook:
+
+```bash
+#!/bin/sh
+npx lint-staged
+trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .
+python -m pytest --tb=short -q
+```
+
+### Monorepo (Turborepo/Nx)
+
+```bash
+#!/bin/sh
+npx lint-staged
+npx turbo typecheck --filter=[HEAD^1]
+trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .
+npx turbo test --filter=[HEAD^1]
+```
+
+---
+
+## Troubleshooting
+
+### "trivy: command not found"
+
+Install via winget:
+
+```powershell
+winget install AquaSecurity.Trivy
+```
+
+Then restart your terminal.
+
+### Husky hooks not running
+
+```bash
+# Reinstall hooks
+pnpm exec husky
+
+# Verify .husky/pre-commit exists and is executable
+# On Windows, Git Bash handles execute permissions
+```
+
+### lint-staged not finding files
+
+Verify that files are actually staged:
+
+```bash
+git diff --cached --name-only
+```
+
+### Trivy slow on first run
+
+First run downloads the vulnerability database (~30MB). Subsequent runs use the cached database. Update with:
+
+```bash
+trivy fs --download-db-only .
+```
+
+### Skipping hooks in emergencies
+
+```bash
+git commit --no-verify -m "hotfix: critical production fix"
+```
+
+Only use for genuine emergencies. Document why in the commit message.

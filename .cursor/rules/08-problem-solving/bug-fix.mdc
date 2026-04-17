@@ -1,0 +1,297 @@
+---
+description: Bug fixing workflow from issue creation to pull request
+globs: ['.github/**', '**/*.md']
+alwaysApply: false
+---
+
+# Bug Fix Workflow
+
+## Core Rule
+
+**Rule**: Follow TDD approach: write failing test first, then implement fix.
+
+## Process
+
+### Before Starting
+
+**Step 1: Create GitHub Issue**
+
+**Actions**:
+- Create issue with descriptive title
+- Include reproduction steps
+- Add error messages/logs
+- Specify environment (browser, OS, version)
+- Add screenshots if UI-related
+
+**Example**:
+```
+Title: Login fails with "Invalid credentials" for valid users
+
+Description:
+- Steps: Navigate to /login, enter valid credentials, click submit
+- Expected: User logged in successfully
+- Actual: Error message "Invalid credentials"
+- Environment: Chrome 120, Windows 11
+- Logs: [paste relevant error logs]
+```
+
+**Step 2: Create Feature Branch**
+
+**Command**:
+```bash
+git checkout -b fix/login-invalid-credentials
+```
+
+**Naming Convention**: `fix/<issue-description>` (kebab-case)
+
+### Fix the Bug
+
+**Step 1: Reproduce the Issue**
+
+**Actions**:
+- Follow exact steps from issue
+- Verify bug occurs consistently
+- Document reproduction steps if different
+- Capture error messages/logs
+
+**Example**:
+```bash
+# Reproduce locally
+pnpm dev
+# Navigate to /login
+# Enter test credentials
+# Observe error
+```
+
+**Step 2: Write Failing Test**
+
+**Rule**: Write test that demonstrates the bug (TDD).
+
+**Example**:
+
+```typescript
+// test/auth/login.test.ts
+describe('Login', () => {
+  it('should authenticate user with valid credentials', async () => {
+    const user = await createTestUser({
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    const result = await loginUser({
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    // This test should pass but currently fails
+    expect(result.success).toBe(true);
+    expect(result.user.id).toBe(user.id);
+  });
+});
+```
+
+**Step 3: Implement the Fix**
+
+**Actions**:
+- Fix the root cause (not just symptom)
+- Follow code quality standards
+- Keep changes focused on the bug
+- Add comments explaining the fix
+
+**Example**:
+
+```typescript
+// Before (buggy code)
+async function loginUser(credentials: LoginCredentials) {
+  const user = await db.users.findFirst({
+    where: { email: credentials.email },
+  });
+
+  if (user && user.password === credentials.password) {
+    return { success: true, user };
+  }
+  return { success: false, error: 'Invalid credentials' };
+}
+
+// After (fixed code)
+import bcrypt from 'bcrypt';
+
+async function loginUser(credentials: LoginCredentials) {
+  const user = await db.users.findFirst({
+    where: { email: credentials.email },
+  });
+
+  if (!user) {
+    return { success: false, error: 'Invalid credentials' };
+  }
+
+  // Fix: Compare hashed password instead of plain text
+  const isValid = await bcrypt.compare(credentials.password, user.password);
+
+  if (isValid) {
+    return { success: true, user };
+  }
+  return { success: false, error: 'Invalid credentials' };
+}
+```
+
+**Step 4: Verify Test Passes**
+
+**Command**:
+```bash
+pnpm test test/auth/login.test.ts
+```
+
+**Step 5: Run Full Test Suite**
+
+**Command**:
+```bash
+pnpm test
+```
+
+**Step 6: Review Code Changes**
+
+**Checklist**:
+- [ ] Code follows project standards
+- [ ] No unrelated changes
+- [ ] Comments explain the fix
+- [ ] Error handling is appropriate
+- [ ] No new linting errors
+
+### On Completion
+
+**Step 1: Commit Changes**
+
+**Format**: `fix: <description> (#<issue-number>)`
+
+**Example**:
+```bash
+git commit -m "fix: compare hashed password in login (#123)"
+```
+
+**Step 2: Push Branch**
+
+**Command**:
+```bash
+git push origin fix/login-invalid-credentials
+```
+
+**Step 3: Create Pull Request**
+
+**Actions**:
+- Create PR with descriptive title
+- Link issue: `Fixes #123` (auto-closes on merge)
+- Add relevant labels: `bug`, `fix`
+- Request reviewers
+- Add description explaining the fix
+
+**PR Title Format**: `[Fix] <description>`
+
+**PR Description Template**:
+```markdown
+## Description
+Fixes #123
+
+## Problem
+Login fails with "Invalid credentials" for valid users because password comparison was done with plain text instead of hashed password.
+
+## Solution
+- Updated `loginUser` function to use `bcrypt.compare()` for password verification
+- Added null check for user before password comparison
+
+## Testing
+- [x] Added test case that reproduces the bug
+- [x] Test passes after fix
+- [x] All existing tests pass
+- [x] Manual testing completed
+
+## Checklist
+- [x] Code follows project standards
+- [x] Tests added/updated
+- [x] Documentation updated (if needed)
+- [x] No breaking changes
+```
+
+## Best Practices
+
+### Keep Changes Focused
+
+**Rule**: Only fix the specific bug; don't refactor unrelated code.
+
+**Example**:
+
+```
+✅ Good: Fix password comparison only
+❌ Bad: Fix password comparison + refactor entire auth module
+```
+
+### Include Regression Tests
+
+**Rule**: Add tests to prevent bug from recurring.
+
+**Example**:
+
+```typescript
+// Test edge cases related to the bug
+it('should handle null user gracefully', async () => {
+  const result = await loginUser({
+    email: 'nonexistent@example.com',
+    password: 'password',
+  });
+
+  expect(result.success).toBe(false);
+  expect(result.error).toBe('Invalid credentials');
+});
+```
+
+### Update Documentation
+
+**Rule**: Update docs if behavior changes or fix affects user-facing features.
+
+**When to update**:
+- API behavior changes
+- Error messages change
+- New configuration required
+- Workaround documented (remove if fixed)
+
+### Consider Edge Cases
+
+**Rule**: Think about related issues and edge cases.
+
+**Questions**:
+- Does this bug affect other similar features?
+- Are there edge cases not covered by the fix?
+- Could the fix introduce new issues?
+
+**Example**:
+
+```typescript
+// Consider: What if password is empty? What if user is deleted?
+// Add tests for these cases
+it('should reject empty password', async () => {
+  const result = await loginUser({
+    email: 'test@example.com',
+    password: '',
+  });
+
+  expect(result.success).toBe(false);
+});
+```
+
+## Integration with Workflow
+
+**Reference**: See `development-workflows/commit.mdc` for commit message format.
+
+**Reference**: See `development-workflows/pr-review.mdc` for PR review checklist.
+
+## Definition of Done
+
+A bug fix is complete when:
+- [ ] Issue is reproduced and understood
+- [ ] Failing test written (TDD)
+- [ ] Fix implemented
+- [ ] Test passes
+- [ ] All tests pass
+- [ ] Code reviewed
+- [ ] PR created and linked to issue
+- [ ] Documentation updated (if needed)

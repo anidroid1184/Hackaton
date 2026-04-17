@@ -1,0 +1,103 @@
+---
+description: Error handling patterns and logging standards
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+# Error Handling Standards
+
+## Core Rule
+
+**Rule**: All errors must be caught, logged with context, and handled appropriately.
+
+## Actions
+
+- ✅ Wrap async operations in `try/catch`
+- ✅ Include context: user ID, session ID, request ID, operation name
+- ✅ Use structured logging (Winston, Pino, or similar)
+- ✅ Never swallow errors silently
+- 🚫 Never use `console.log` in production code
+
+## Examples
+
+### Basic Error Handling
+
+```typescript
+// ❌ Poor error handling
+async function fetchUser(id: string) {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json();
+}
+
+// ✅ Proper error handling
+import logger from '@/lib/logger';
+
+async function fetchUser(id: string, requestId: string) {
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    logger.error('Failed to fetch user', {
+      userId: id,
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
+}
+```
+
+### Sentry Integration
+
+If using Sentry, include user context:
+
+```typescript
+import * as Sentry from '@sentry/node';
+
+try {
+  // ... operation
+} catch (error) {
+  Sentry.setUser({ id: userId, email: userEmail });
+  Sentry.setContext('request', { requestId, path, method });
+  Sentry.captureException(error);
+  throw error;
+}
+```
+
+### Custom Error Classes
+
+Create domain-specific error classes:
+
+```typescript
+// ✅ Custom error with context
+class UserNotFoundError extends Error {
+  constructor(userId: string) {
+    super(`User ${userId} not found`);
+    this.name = 'UserNotFoundError';
+  }
+}
+
+// Usage
+try {
+  const user = await findUser(id);
+  if (!user) throw new UserNotFoundError(id);
+} catch (error) {
+  if (error instanceof UserNotFoundError) {
+    logger.warn('User lookup failed', { userId: id });
+    return null;
+  }
+  throw error;
+}
+```
+
+## Error Context Requirements
+
+Always include:
+- **Operation name**: What was being attempted
+- **User context**: User ID, session ID (if available)
+- **Request context**: Request ID, endpoint, method
+- **Error details**: Message, stack trace, error code
+- **Timestamp**: Usually handled by logger

@@ -1,0 +1,17 @@
+---
+description: "Reglas criticas para el manejo de archivos .env y credenciales"
+alwaysApply: true
+---
+
+# Seguridad de Variables de Entorno
+
+## REGLA DE ORO
+- NUNCA sobrescribas un archivo `.env` o `.env.local` sin haber leído su contenido anterior primero (usando `read_file`).
+- NUNCA uses comandos de terminal como `` o `Out-File` que reemplacen el archivo completo.
+- SIEMPRE usa comandos de append (como ``) o herramientas de edición de archivos (`StrReplace` o similar) para agregar variables.
+
+## Procedimiento ante cambios en .env
+1. Leer el archivo actual.
+2. Identificar si la variable ya existe.
+3. Si existe, preguntar antes de actualizar.
+4. Si no existe, agregarla al final preservando los comentarios anteriores.

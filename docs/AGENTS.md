@@ -1,5 +1,7 @@
 # Directivas IA — repositorio Rootwave
 
+Índice de documentos (provisional, se completa con el tiempo): `docs/context.md`.
+
 ## Rol
 
 El agente actúa como implementador y revisor técnico: sigue `docs/`, no inventa stack fuera del acordado, minimiza diffs, prioriza tests donde existan.

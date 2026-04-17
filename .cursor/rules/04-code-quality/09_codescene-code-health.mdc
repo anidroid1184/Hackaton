@@ -1,0 +1,130 @@
+---
+description: 'CodeScene MCP integration: code health analysis, auto-refactoring, technical debt tracking, and pre-commit safeguards'
+globs: ['**/*.{js,ts,jsx,tsx,py,java,cs,cpp,c,h,hpp}']
+alwaysApply: false
+---
+# CodeScene code health rules
+
+Configuration for AI behavior when interacting with the CodeScene MCP Server.
+
+## Score interpretation
+
+CodeScene scores files on a 1.0-10.0 scale:
+
+- 10.0 (optimal): code optimized for both human and AI comprehension
+- 9.0-9.9 (green): high quality, no action needed
+- 4.0-8.9 (yellow): problematic technical debt, consider refactoring
+- 1.0-3.9 (red): severe technical debt, expensive to maintain, prioritize refactoring
+
+Minimum acceptable score for new or modified code: 6.0.
+
+## After file edits: check code health
+
+- After editing a supported file, run `code_health_score` with the absolute `file_path` to verify health did not degrade
+- If the score dropped below 6.0 or into the red zone (below 4.0), alert the user and suggest fixes
+- For a detailed breakdown of issues, run `code_health_review` instead of `code_health_score`
+
+## Pre-commit quality gate
+
+- Before creating a git commit, run `pre_commit_code_health_safeguard` with the `git_repository_path`
+- This analyzes all modified and staged files and reports code smells that would degrade health
+- If the quality gate fails, fix the reported smells before committing
+- This tool requires the workspace to be a git repository
+
+## Auto-refactoring with CodeScene ACE
+
+- When `code_health_review` reports any of these code smells on a function under 300 lines:
+  - Complex Conditional
+  - Bumpy Road Ahead
+  - Complex Method
+  - Deep, Nested Complexity
+  - Large Method
+- Offer to run `code_health_auto_refactor` with `file_path` and `function_name`
+- Supported languages: JavaScript/TypeScript, Java, C#, C++
+- The tool returns refactored code, optional declarations (for C++ headers), a confidence level, and reasons
+- For low confidence results, review the refactoring and fix any introduced problems before applying
+- Insert new extracted functions close to the refactored function
+
+## Business case for refactoring
+
+- When a file scores below 4.0 (red), offer to run `code_health_refactoring_business_case` with the `file_path`
+- This generates quantified predictions for development speed improvement and defect reduction
+- Present the optimistic/pessimistic outcomes and confidence interval to the user to justify refactoring effort
+
+## Escalation path for persistent low scores
+
+- If a file remains below 4.0 (red) after auto-refactoring attempts:
+  1. Run `code_health_review` to get the full breakdown of remaining smells
+  2. If the dominant smell is **Large Method** or **Complex Method** and the function exceeds 300 lines, auto-refactoring is not supported -- flag for manual refactoring
+  3. If multiple smells overlap (e.g., Bumpy Road + Deep Nesting + Large Method), recommend architectural review: the file likely needs decomposition into smaller modules
+  4. Create a technical debt ticket referencing the `code_health_refactoring_business_case` output to justify the effort
+  5. If the file scores below 2.0 after two refactoring attempts, escalate to the user as a blocking issue that requires dedicated refactoring time
+
+## Technical debt tracking
+
+- When the user asks about project health or technical debt:
+  1. Run `select_project` to list available projects and let the user choose
+  2. Use the selected `project_id` for subsequent calls
+  3. Run `list_technical_debt_hotspots_for_project` to identify the worst files
+  4. Run `list_technical_debt_goals_for_project` to show improvement targets
+- For file-specific debt analysis:
+  - `list_technical_debt_hotspots_for_project_file` with `file_path` and `project_id`
+  - `list_technical_debt_goals_for_project_file` with `file_path` and `project_id`
+
+## Code ownership
+
+- During PR reviews or when identifying who to consult about a file, run `code_ownership_for_path` with `project_id` and `path`
+- Present results as a markdown table with columns: Owner, Key Areas, Link
+
+## Explaining code health concepts
+
+- When the user asks what Code Health is or how it works, run `explain_code_health`
+- When the user asks about the business impact of code health, run `explain_code_health_productivity`
+- You can also fetch the MCP resources for deeper documentation:
+  - `file://codescene-docs/code-health/how-it-works.md`
+  - `file://codescene-docs/code-health/business-case.md`
+
+## Supported file types
+
+CodeScene code health analysis supports these languages only:
+
+- JavaScript / TypeScript (`.js`, `.ts`, `.jsx`, `.tsx`)
+- Java (`.java`)
+- C# (`.cs`)
+- C / C++ (`.c`, `.h`, `.cpp`, `.hpp`)
+- Python (`.py`)
+
+Do NOT run `code_health_score`, `code_health_review`, or `code_health_auto_refactor` on:
+
+- Markdown files (`.md`, `.mdc`)
+- JSON / YAML / TOML config files
+- CSS / SCSS / HTML files
+- Shell scripts (`.sh`, `.ps1`)
+
+## Alignment with complexity standards
+
+CodeScene health scores complement the metrics defined in `04-code-quality/05_code-complexity.mdc`:
+
+| Metric                | Target            | CodeScene Equivalent                                      |
+| --------------------- | ----------------- | --------------------------------------------------------- |
+| Cyclomatic complexity | < 10 per function | Complex Method, Complex Conditional                       |
+| Lines per function    | < 50              | Large Method                                              |
+| Lines per file        | < 300             | (not directly measured, but contributes to overall score) |
+| Nesting depth         | minimal           | Deep, Nested Complexity                                   |
+| Code duplication      | < 3%              | (use `jscpd` or Codacy for duplication)                   |
+
+When CodeScene flags a smell, cross-reference with the complexity targets above to determine severity.
+
+## General
+
+- Do not run CodeScene tools on files outside the supported language list (see above)
+- When `code_health_review` or `code_health_score` returns a version update notice, inform the user and recommend updating the CodeScene MCP Server
+- CodeScene focuses on structural code health (complexity, nesting, method size, readability)
+- For pattern-based linting and security scanning, use Codacy instead (see `07-processes/codacy.mdc`)
+
+## Coordination with Codacy and Trivy
+
+- CodeScene handles: structural code health, complexity metrics, auto-refactoring, technical debt tracking, business case generation
+- Codacy handles: pattern-based linting (eslint, pmd, pylint), code pattern analysis (MCP API only, no CLI on Windows)
+- Trivy handles: secrets and dependency vulnerability scanning (run via CLI directly, not through Codacy MCP)
+- When both MCP servers are available, run both on edited files; they complement each other

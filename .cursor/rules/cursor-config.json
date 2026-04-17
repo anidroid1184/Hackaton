@@ -1,0 +1,199 @@
+{
+  "projectType": "rootwave-hackathon",
+  "rules": {
+    "enabled": true,
+    "autoApply": true,
+    "strictMode": false
+  },
+  "workflows": {
+    "commit": {
+      "enabled": true,
+      "conventionalCommits": true,
+      "emojiSupport": false,
+      "preCommitChecks": true
+    },
+    "prReview": {
+      "enabled": true,
+      "multiPerspective": true,
+      "autoAssignReviewers": false
+    },
+    "testing": {
+      "enabled": true,
+      "tdd": true,
+      "coverage": true,
+      "e2e": true
+    },
+    "documentation": {
+      "enabled": true,
+      "autoGenerate": false,
+      "llmOptimized": true,
+      "timestampFormat": "<!-- Generated: YYYY-MM-DD HH:MM:SS UTC -->"
+    },
+    "codeQuality": {
+      "enabled": true,
+      "linting": true,
+      "typeChecking": true,
+      "securityScan": true,
+      "performanceAnalysis": true
+    }
+  },
+  "fileLimits": {
+    "maxLines": 300,
+    "maxFunctionLines": 50,
+    "maxParameters": 5
+  },
+  "naming": {
+    "constants": "UPPER_SNAKE_CASE",
+    "functions": "camelCase",
+    "classes": "PascalCase",
+    "files": "kebab-case"
+  },
+  "documentation": {
+    "structure": [
+      "docs/AGENTS.md",
+      "docs/context.md",
+      "docs/ARCHITECTURE.md",
+      "docs/CONVENTIONS.md",
+      "docs/API_SPEC.md",
+      "docs/DATABASE.md",
+      "docs/MOCK_DATA.md",
+      "docs/TASKS.md"
+    ],
+    "requiredSections": [
+      "Overview",
+      "Usage",
+      "API/Props/Parameters",
+      "Behavior",
+      "Error Handling",
+      "Testing"
+    ]
+  },
+  "testing": {
+    "types": ["unit", "integration", "e2e"],
+    "locations": {
+      "unit": "test/unit/",
+      "integration": "test/integration/",
+      "e2e": "test/e2e/"
+    },
+    "naming": {
+      "unit": "*.test.ts",
+      "integration": "*.spec.ts",
+      "e2e": "*.e2e.ts"
+    }
+  },
+  "security": {
+    "inputValidation": true,
+    "authentication": true,
+    "authorization": true,
+    "dataProtection": true,
+    "vulnerabilityScan": true
+  },
+  "performance": {
+    "bottleneckDetection": true,
+    "memoryUsage": true,
+    "algorithmComplexity": true,
+    "databaseOptimization": true
+  },
+  "accessibility": {
+    "wcagCompliance": true,
+    "assistiveTechnology": true,
+    "keyboardNavigation": true,
+    "screenReader": true
+  },
+  "projectSpecific": {
+    "javascript": {
+      "framework": "react",
+      "bundler": "vite",
+      "packageManager": "pnpm",
+      "linter": "eslint",
+      "formatter": "prettier"
+    },
+    "python": {
+      "framework": "fastapi",
+      "linter": "ruff",
+      "formatter": "ruff",
+      "typeChecker": "mypy"
+    },
+    "typescript": {
+      "framework": "react",
+      "bundler": "vite",
+      "packageManager": "pnpm",
+      "linter": "eslint",
+      "formatter": "prettier"
+    }
+  },
+  "automation": {
+    "screenshots": {
+      "enabled": false,
+      "platform": "linux",
+      "scriptType": "shell",
+      "outputFormat": "png"
+    },
+    "diagrams": {
+      "enabled": true,
+      "type": "mermaid",
+      "validation": true
+    }
+  },
+  "statusManagement": {
+    "pbiStatuses": [
+      "Proposed",
+      "Agreed",
+      "InProgress",
+      "InReview",
+      "Done",
+      "Rejected"
+    ],
+    "taskStatuses": [
+      "Proposed",
+      "Agreed",
+      "InProgress",
+      "Review",
+      "Done",
+      "Blocked"
+    ],
+    "logging": {
+      "enabled": true,
+      "format": "timestamp, PBI_ID, event, details, user"
+    }
+  },
+  "versionControl": {
+    "commitFormat": "<task_id> <task_description>",
+    "prTitleFormat": "[<task_id>] <task_description>",
+    "branchNaming": {
+      "feature": "feat/<description>",
+      "bugfix": "fix/<description>",
+      "hotfix": "hotfix/<description>",
+      "docs": "docs/<description>"
+    }
+  },
+  "externalPackages": {
+    "researchRequired": true,
+    "guideFormat": "<task_id>-<package>-guide.md",
+    "locations": ["tasks/", "docs/delivery/<PBI-ID>/guides/"]
+  },
+  "integration": {
+    "ci": {
+      "enabled": true,
+      "platform": "github-actions",
+      "checks": ["lint", "test", "build", "security"]
+    },
+    "cd": {
+      "enabled": true,
+      "autoDeploy": false,
+      "environments": ["staging", "production"]
+    }
+  },
+  "maintenance": {
+    "refactoring": {
+      "enabled": true,
+      "frequency": "monthly",
+      "technicalDebt": true
+    },
+    "dependencies": {
+      "updateFrequency": "weekly",
+      "securityAudit": true,
+      "vulnerabilityScan": true
+    }
+  }
+}

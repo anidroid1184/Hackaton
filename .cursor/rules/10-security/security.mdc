@@ -1,0 +1,323 @@
+---
+description: 'Security standards: input validation, XSS/SQLi prevention, CORS, secrets, auth, SSRF, file uploads, OWASP Top 10'
+globs: ['**/*.{ts,tsx,js,jsx,py,go,java,cs,rb,php}']
+alwaysApply: false
+---
+# Security Standards
+
+## Input Validation
+
+**Rule**: All external inputs must be validated and sanitized.
+
+**Actions**:
+
+- ✅ Validate API inputs with schema validators (Zod, Yup, Joi)
+- ✅ Sanitize HTML/DOM content (DOMPurify)
+- ✅ Use parameterized queries for databases
+- 🚫 Never trust user input
+
+**Example**:
+
+```typescript
+// ✅ Input validation with Zod
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  email: z.string().email(),
+  age: z.number().int().min(18).max(120),
+});
+
+function createUser(input: unknown) {
+  const validated = UserSchema.parse(input); // Throws if invalid
+  // Safe to use validated.email and validated.age
+}
+```
+
+## XSS Prevention
+
+**Rule**: Sanitize all user-generated content before rendering.
+
+**Example**:
+
+```typescript
+// ❌ Vulnerable to XSS
+function renderUserContent(content: string) {
+  return <div dangerouslySetInnerHTML={{ __html: content }} />;
+}
+
+// ✅ Sanitized
+import DOMPurify from 'dompurify';
+
+function renderUserContent(content: string) {
+  const sanitized = DOMPurify.sanitize(content);
+  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />;
+}
+```
+
+## SQL Injection Prevention
+
+**Rule**: Always use parameterized queries or ORM methods.
+
+**Example**:
+
+```typescript
+// ❌ Vulnerable to SQL injection
+const query = `SELECT * FROM users WHERE id = ${userId}`;
+
+// ✅ Parameterized query
+const query = 'SELECT * FROM users WHERE id = ?';
+db.query(query, [userId]);
+
+// ✅ ORM (TypeORM example)
+const user = await userRepository.findOne({ where: { id: userId } });
+```
+
+## Secret Management
+
+**Rule**: Never commit secrets, tokens, or credentials.
+
+**Actions**:
+
+- ✅ Store secrets in environment variables (never in code)
+- ✅ Use `.env.example` to document required variables
+- ✅ Use vault in CI (GitHub Secrets, AWS Secrets Manager)
+- ✅ Rotate keys at least every 90 days
+- 🚫 Never expose `.env` files to frontend bundles
+- 🚫 Never commit `.env` files
+
+**Secret Detection**: Use Trivy (primary) or `git-secrets`/`truffleHog` in CI:
+
+```bash
+# Local scan (primary)
+trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .
+
+# CI pre-commit hook (alternative)
+git-secrets --scan
+```
+
+## Dependency Security
+
+**Rule**: Keep dependencies updated and scan for vulnerabilities.
+
+**Actions**:
+
+- ✅ Run `trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .` before merge
+- ✅ Enable Dependabot or Renovate for automatic PRs
+- ✅ Run `pnpm audit` as secondary check
+- ✅ Use SCA tools (Snyk, GitHub Security)
+- ✅ Review and update dependencies quarterly
+
+**CI Check**:
+
+```bash
+trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .
+pnpm audit --audit-level=moderate
+```
+
+## HTTP Security
+
+**Rule**: Always use HTTPS and configure security headers.
+
+**Actions**:
+
+- ✅ Always use HTTPS for network requests
+- ✅ Configure security headers:
+  - `Content-Security-Policy`
+  - `Strict-Transport-Security`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy`
+
+**Example** (Express.js):
+
+```typescript
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
+```
+
+## CORS Configuration
+
+**Rule**: CORS must use strict allowlist (never wildcard).
+
+**Example**:
+
+```typescript
+// ❌ Insecure
+app.use(cors());
+
+// ✅ Secure with allowlist
+app.use(
+  cors({
+    origin: ['https://example.com', 'https://app.example.com'],
+    credentials: true,
+  })
+);
+```
+
+## Command Execution
+
+**Rule**: Never execute user input as shell commands.
+
+**Example**:
+
+```typescript
+// ❌ Vulnerable to command injection
+execSync(`npm install ${packageName}`);
+
+// ✅ Safe execution
+import { execFileSync } from 'child_process';
+execFileSync('npm', ['install', packageName], { encoding: 'utf8' });
+```
+
+## Authentication & Authorization
+
+**Rule**: Implement secure authentication with proper token handling.
+
+**Actions**:
+
+- ✅ Use JWT with expiration (max 15 minutes for access tokens)
+- ✅ Hash passwords with bcrypt (cost factor ≥12)
+- ✅ Implement refresh token rotation
+- ✅ Validate JWT signatures and expiration
+- 🚫 Never store passwords in plain text
+
+## SSRF Prevention
+
+**Rule**: Never allow user input to control server-side HTTP requests without validation.
+
+**Example**:
+
+```typescript
+// ❌ Vulnerable to SSRF
+async function fetchUrl(url: string) {
+  const response = await fetch(url); // User controls destination
+  return response.text();
+}
+
+// ✅ Allowlist-based validation
+const ALLOWED_HOSTS = new Set(['api.example.com', 'cdn.example.com']);
+
+async function fetchUrl(url: string) {
+  const parsed = new URL(url);
+  if (!ALLOWED_HOSTS.has(parsed.hostname)) {
+    throw new Error('Host not allowed');
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new Error('Only HTTPS allowed');
+  }
+  // Block internal IPs (127.0.0.1, 10.x, 172.16-31.x, 192.168.x)
+  const ip = await dns.resolve(parsed.hostname);
+  if (isPrivateIP(ip)) {
+    throw new Error('Internal addresses not allowed');
+  }
+  return fetch(url).then((r) => r.text());
+}
+```
+
+## File Upload Security
+
+**Rule**: Validate file type, size, and content before accepting uploads.
+
+**Actions**:
+
+- ✅ Validate MIME type against allowlist (not just file extension)
+- ✅ Enforce maximum file size limits
+- ✅ Scan uploaded files for malware when possible
+- ✅ Store uploads outside the web root
+- ✅ Generate random filenames (never use user-provided names directly)
+- 🚫 Never execute uploaded files
+- 🚫 Never serve uploads with their original Content-Type without validation
+
+**Example**:
+
+```typescript
+import { z } from 'zod';
+
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+]);
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+function validateUpload(file: File): void {
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    throw new Error('File type not allowed');
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File exceeds maximum size');
+  }
+  // Generate safe filename
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const safeName = `${crypto.randomUUID()}.${ext}`;
+}
+```
+
+## Foundational Security Principles
+
+### Security by Design
+
+**Rule**: Implement security from the design phase, not as an afterthought.
+
+### Defense in Depth
+
+**Rule**: Layer multiple security controls so if one fails, others remain active.
+
+**Example**: Combine input validation + parameterized queries + ORM + WAF.
+
+### Least Privilege
+
+**Rule**: Grant minimum necessary access.
+
+**Actions**:
+
+- ✅ Review permissions regularly
+- ✅ Use role-based access control (RBAC)
+- ✅ Limit API key scopes
+
+### Fail Securely
+
+**Rule**: Errors should fail to the secure side.
+
+```typescript
+// ✅ Generic error message (doesn't reveal user existence)
+try {
+  await authenticateUser(credentials);
+} catch (error) {
+  throw new Error('Invalid credentials');
+}
+
+// ❌ Reveals whether user exists
+if (!user) {
+  throw new Error('User not found');
+}
+```
+
+### Zero Trust
+
+**Rule**: Verify always; never trust by default. Authenticate and authorize every request.
+
+## OWASP Top 10 Review
+
+**Rule**: Perform quarterly security review against OWASP Top 10.
+
+**Checklist**:
+
+- [ ] Injection (SQL, NoSQL, Command)
+- [ ] Broken Authentication
+- [ ] Sensitive Data Exposure
+- [ ] XML External Entities (XXE)
+- [ ] Broken Access Control
+- [ ] Security Misconfiguration
+- [ ] XSS (Cross-Site Scripting)
+- [ ] Insecure Deserialization
+- [ ] Using Components with Known Vulnerabilities
+- [ ] Insufficient Logging & Monitoring
+- [ ] Server-Side Request Forgery (SSRF)
+
+**Reference**: https://owasp.org/www-project-top-ten/

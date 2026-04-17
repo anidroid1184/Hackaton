@@ -1,0 +1,96 @@
+---
+description: 'Cursor hooks system: pre/post tool execution, auto-formatting, and quality gates'
+alwaysApply: false
+---
+# Cursor Hooks
+
+Hooks run custom scripts before or after agent actions. Configured in `.cursor/hooks.json` (project root).
+
+Reference: [Cursor Hooks Docs](https://cursor.com/docs/agent/hooks)
+
+## Hook events
+
+| Event | When | Use case |
+| ----- | ---- | -------- |
+| `afterFileEdit` | After agent edits a file | Auto-format, lint, validate |
+| `beforeShellExecution` | Before shell command runs | Block dangerous commands |
+| `afterShellExecution` | After shell command completes | Audit logs, capture PR URLs |
+| `stop` | Agent session ends | Final verification, cleanup |
+| `sessionStart` | New conversation begins | Inject context, set env vars |
+| `preToolUse` | Before any tool runs | Validate tool usage (with matcher) |
+| `beforeReadFile` | Before agent reads a file | Redact secrets, access control |
+
+## Current project hooks
+
+### afterFileEdit
+
+- **Lint** (`after-edit-lint.sh`, 15s timeout): Prettier + ESLint `--fix` in a single script
+- **console.log** (`after-edit-console-warn.sh`, 5s timeout): warns if `console.log` found in edited file
+
+### preToolUse
+
+- **Fallback review** (prompt hook, 12s timeout): Cursor reviews pending edit operations for silent fallbacks before applying them. This is the closest Cursor-native adaptation of [claude-pre-commit.sh](https://gist.github.com/boxabirds/9e9261700533c7636c940e2a107c27b5): same intent, but enforced on agent file edits (`Write`, `ApplyPatch`, `EditNotebook`) instead of a Git hook. It is LLM-evaluated and conservative by design.
+
+### beforeShellExecution (with matcher)
+
+- **Guard**: blocks `rm -rf /`, force push to main/master, asks before `--no-verify`
+
+### afterShellExecution
+
+- **PR logger** (5s timeout): captures PR URL and review command after `gh pr create`
+
+### stop
+
+- **console.log audit** (10s timeout): checks all git-modified JS/TS files for `console.log`
+
+## Git pre-commit vs Cursor hooks
+
+Cursor **does not expose a native Git pre-commit event** for its model hooks. Prompt hooks run inside the agent/tool lifecycle, not inside Husky or Git itself.
+
+- If the goal is **Cursor-native model review**, `preToolUse` is the right place.
+- If the goal is **true Git pre-commit review for every commit**, that requires an external CLI or API call from Husky. Cursor's built-in prompt hooks cannot be called from `.husky/pre-commit`.
+
+## Real Git pre-commit
+
+This repo also uses a real Git hook:
+
+- **Versioned hook**: `.githooks/pre-commit`
+- **Local activator**: `.git/hooks/pre-commit` delegates to the versioned script without editing `core.hooksPath`
+- **Checks**: `.cursor/scripts/pre-commit-checks.mjs`
+
+Current deterministic checks:
+
+- Parse staged `.json` files to fail fast on invalid JSON
+- Run `sh -n` on staged `.sh` files when `sh` is available
+- If `.cursor/hooks.json` or files under `.cursor/hooks/` are staged, verify that `hooks.json` only references existing hook scripts
+
+## Pipeline overview
+
+```text
+Agent edits file
+  ├── [afterFileEdit] Prettier + ESLint --fix (15s timeout)
+  ├── [afterFileEdit] console.log warning (5s timeout)
+  └── [preToolUse] prompt-based fallback review before edit is applied
+
+Agent runs shell command
+  ├── [beforeShellExecution] Guard (rm -rf, force push, --no-verify)
+  └── [afterShellExecution] PR URL logging (5s timeout)
+
+Agent session ends
+  └── [stop] Final console.log audit (10s timeout)
+
+Git commit starts
+  └── [.githooks/pre-commit] staged-file deterministic checks
+```
+
+## Exit codes (per Cursor docs)
+
+- `0` = success / allow
+- `2` = deny (block the action)
+- Other = hook failed, action continues (fail-open)
+
+## Requirements
+
+- **jq**: all scripts parse JSON input with it
+- **npx**: used by lint hook
+- **Git Bash or WSL** on Windows: scripts are bash

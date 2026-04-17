@@ -1,0 +1,374 @@
+---
+description: Modern React 18+ patterns and Next.js 14+ App Router standards
+globs: ['app/**/*.tsx', 'src/**/*.tsx', 'components/**/*.tsx']
+alwaysApply: false
+---
+
+# React & Next.js Patterns
+
+## Core Rule
+
+**Rule**: Use React Server Components by default, Client Components only when needed.
+
+## Server Components First
+
+**Rule**: Default to Server Components; use Client Components only for interactivity.
+
+**Example**:
+
+```tsx
+// ✅ Good: Server Component (default in App Router)
+export default async function ProductList() {
+  const products = await db.products.findMany();
+
+  return (
+    <div>
+      {products.map((product) => (
+        <ProductCard key={product.id} {...product} />
+      ))}
+    </div>
+  );
+}
+
+// ✅ Good: Client Component when needed
+'use client';
+
+import { useState } from 'react';
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount((c) => c + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+
+**When to use Client Components**:
+- Event handlers (`onClick`, `onChange`)
+- State (`useState`, `useReducer`)
+- Effects (`useEffect`)
+- Browser APIs (localStorage, window)
+- Third-party libraries requiring client-side
+
+## Server Actions (Next.js 14+)
+
+**Rule**: Use Server Actions for form submissions and mutations.
+
+**Example**:
+
+```tsx
+// app/actions/posts.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { db } from '@/lib/db';
+
+export async function createPost(formData: FormData) {
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+
+  if (!title || !content) {
+    throw new Error('Title and content are required');
+  }
+
+  await db.posts.create({
+    data: { title, content },
+  });
+
+  revalidatePath('/posts');
+}
+
+// app/posts/page.tsx
+import { createPost } from '@/app/actions/posts';
+
+export default function PostsPage() {
+  return (
+    <form action={createPost}>
+      <input name="title" placeholder="Title" required />
+      <textarea name="content" placeholder="Content" required />
+      <button type="submit">Create Post</button>
+    </form>
+  );
+}
+```
+
+**Best Practices**:
+- ✅ Validate input in Server Actions
+- ✅ Use `revalidatePath()` or `revalidateTag()` after mutations
+- ✅ Handle errors with try/catch
+- ✅ Return appropriate responses
+
+## Modern Hooks Usage
+
+### useState
+
+**Rule**: Use functional updates to avoid stale closures.
+
+**Example**:
+
+```tsx
+// ✅ Good: Functional update
+const [count, setCount] = useState(0);
+<button onClick={() => setCount((c) => c + 1)}>Increment</button>
+
+// ❌ Bad: Closure over stale state
+<button onClick={() => setCount(count + 1)}>Increment</button>
+```
+
+### useEffect
+
+**Rule**: Minimize usage; prefer Server Components or event handlers.
+
+**When to use**:
+- ✅ Browser API integration (localStorage, window)
+- ✅ Third-party library setup
+- ✅ Subscriptions (WebSocket, intervals)
+
+**When NOT to use**:
+- ❌ Data fetching (use Server Components or Server Actions)
+- ❌ Derived state (use `useMemo` or compute in render)
+- ❌ Event handlers (use callbacks directly)
+
+**Example**:
+
+```tsx
+// ✅ Good: Necessary useEffect
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export function ThemeToggle() {
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored) setTheme(stored);
+  }, []);
+
+  return <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+    {theme}
+  </button>;
+}
+```
+
+### useCallback
+
+**Rule**: Only use when passing to memoized children.
+
+**Example**:
+
+```tsx
+// ✅ Good: Memoized callback for memoized child
+import { memo, useCallback } from 'react';
+
+const ExpensiveChild = memo(({ onClick }: { onClick: () => void }) => {
+  // Expensive render
+  return <button onClick={onClick}>Click</button>;
+});
+
+export function Parent() {
+  const handleClick = useCallback(() => {
+    console.log('Clicked');
+  }, []);
+
+  return <ExpensiveChild onClick={handleClick} />;
+}
+
+// ❌ Bad: Unnecessary useCallback
+export function SimpleButton() {
+  const handleClick = useCallback(() => {
+    console.log('Clicked');
+  }, []);
+
+  return <button onClick={handleClick}>Click</button>;
+}
+```
+
+### useMemo
+
+**Rule**: Use only for expensive computations.
+
+**Example**:
+
+```tsx
+// ✅ Good: Expensive computation
+const sortedItems = useMemo(() => {
+  return items.sort((a, b) => a.name.localeCompare(b.name));
+}, [items]);
+
+// ❌ Bad: Simple computation (not expensive)
+const doubled = useMemo(() => count * 2, [count]);
+// Better: const doubled = count * 2;
+```
+
+## App Router Best Practices
+
+### Route Groups
+
+**Rule**: Use `()` for organization without affecting URLs.
+
+**Structure**:
+```
+app/
+├── (marketing)/
+│   ├── about/
+│   └── contact/
+└── (dashboard)/
+    ├── settings/
+    └── profile/
+```
+
+**URLs**: `/about`, `/contact`, `/settings`, `/profile` (no `(marketing)` or `(dashboard)` in URL)
+
+### Parallel Routes
+
+**Rule**: Use `@folder` for complex layouts.
+
+**Structure**:
+```
+app/
+├── @analytics/
+├── @team/
+└── layout.tsx
+```
+
+### Loading UI
+
+**Rule**: Implement `loading.tsx` for Suspense boundaries.
+
+**Example**:
+
+```tsx
+// app/posts/loading.tsx
+export default function Loading() {
+  return <div>Loading posts...</div>;
+}
+```
+
+### Error Boundaries
+
+**Rule**: Use `error.tsx` for route-level error handling.
+
+**Example**:
+
+```tsx
+// app/posts/error.tsx
+'use client';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error;
+  reset: () => void;
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={reset}>Try again</button>
+    </div>
+  );
+}
+```
+
+## Metadata & SEO
+
+**Rule**: Generate metadata for all pages.
+
+**Example**:
+
+```tsx
+// app/posts/[id]/page.tsx
+import { Metadata } from 'next';
+import { db } from '@/lib/db';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const post = await db.posts.findUnique({
+    where: { id: params.id },
+  });
+
+  if (!post) {
+    return {
+      title: 'Post Not Found',
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [{ url: post.coverImage }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+    },
+  };
+}
+
+export default async function PostPage({ params }: { params: { id: string } }) {
+  const post = await db.posts.findUnique({ where: { id: params.id } });
+  return <article>{post.content}</article>;
+}
+```
+
+## Data Fetching
+
+**Rule**: Fetch data in Server Components; use Server Actions for mutations.
+
+**Example**:
+
+```tsx
+// ✅ Good: Server Component data fetching
+export default async function UserProfile({ userId }: { userId: string }) {
+  const user = await db.users.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    return <div>User not found</div>;
+  }
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+// ❌ Bad: Client Component data fetching (unless necessary)
+'use client';
+
+export function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`).then(res => res.json()).then(setUser);
+  }, [userId]);
+
+  // ...
+}
+```
+
+## Key Patterns Summary
+
+| Pattern | Use When | Example |
+|---------|----------|---------|
+| Server Component | Default, data fetching | `export default async function Page()` |
+| Client Component | Interactivity needed | `'use client'` + hooks |
+| Server Action | Form submissions | `'use server'` + form action |
+| Route Groups | Organize without URL change | `(marketing)/about` |
+| Parallel Routes | Complex layouts | `@analytics/` |
+| Loading UI | Suspense boundaries | `loading.tsx` |
+| Error Boundary | Route error handling | `error.tsx` |
+
+**Reference**: [Next.js App Router Documentation](https://nextjs.org/docs/app)

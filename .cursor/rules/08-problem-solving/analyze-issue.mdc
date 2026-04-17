@@ -1,0 +1,444 @@
+---
+description: Comprehensive issue analysis and implementation specification template
+globs: ['**/*.md', 'docs/**', '.github/**']
+alwaysApply: false
+---
+
+# Issue Analysis Template
+
+## Core Rule
+
+**Rule**: Create comprehensive implementation specification before starting work on any issue.
+
+## Process
+
+### Step 1: Fetch Issue Details
+
+**Command**:
+```bash
+gh issue view <issue_number>
+```
+
+**Alternative**: Use GitHub web interface or API.
+
+**Extract**:
+- Issue title and description
+- Labels and assignees
+- Comments and discussions
+- Linked PRs or issues
+- Acceptance criteria
+
+### Step 2: Review Related Code
+
+**Actions**:
+- Search codebase for related files
+- Review similar implementations
+- Understand current architecture
+- Identify affected areas
+
+**Commands**:
+```bash
+# Search for related code
+grep -r "keyword" src/
+# Find similar implementations
+find src/ -name "*similar-feature*"
+```
+
+### Step 3: Create Specification
+
+**Rule**: Use the template below to create detailed specification.
+
+## Specification Template
+
+### 1. Issue Summary
+
+**Rule**: Brief overview of the issue.
+
+**Include**:
+- Issue number and title
+- One-sentence description
+- Priority/severity
+
+**Example**:
+```
+Issue: #456 - Add user profile image upload
+Summary: Users need to upload and update profile images.
+Priority: Medium
+```
+
+### 2. Contextual Pointers
+
+**Rule**: Key files, directories, concepts, or business logic to guide analysis.
+
+**Include**:
+- Relevant file paths
+- Related components/modules
+- Key concepts or patterns
+- Business rules
+
+**Example**:
+```
+Key Files:
+- src/components/UserProfile.tsx
+- src/api/users.ts
+- src/lib/storage.ts
+
+Related Features:
+- User authentication
+- File upload functionality
+
+Business Rules:
+- Max image size: 5MB
+- Supported formats: JPG, PNG, WebP
+- Images stored in S3 bucket
+```
+
+### 3. Problem Statement
+
+**Rule**: Clear definition of what needs to be solved.
+
+**Include**:
+- Current state
+- Desired state
+- Gap between them
+
+**Example**:
+```
+Current State:
+- Users cannot upload profile images
+- Profile displays default avatar only
+
+Desired State:
+- Users can upload profile images
+- Images are displayed in profile
+- Images can be updated or removed
+
+Gap:
+- Missing upload UI component
+- No image storage integration
+- No API endpoint for image upload
+```
+
+### 4. Technical Approach
+
+**Rule**: High-level solution approach and architecture decisions.
+
+**Include**:
+- Architecture pattern
+- Technology choices
+- Design decisions
+- Trade-offs considered
+
+**Example**:
+```
+Approach:
+- Use existing file upload service (S3)
+- Create new API endpoint: POST /api/users/:id/avatar
+- Add upload component to UserProfile page
+- Store image URL in user record
+
+Architecture:
+- Frontend: React component with file input
+- Backend: Express route with multer middleware
+- Storage: AWS S3 with public read access
+- Database: Update user.avatarUrl field
+
+Trade-offs:
+- S3 vs local storage: S3 chosen for scalability
+- Direct upload vs server proxy: Server proxy for security
+```
+
+### 5. Implementation Plan
+
+**Rule**: Step-by-step breakdown of implementation tasks.
+
+**Format**: Numbered list with clear, testable steps.
+
+**Example**:
+```
+1. Create API endpoint for image upload
+   - Add POST /api/users/:id/avatar route
+   - Implement multer middleware for file handling
+   - Validate file type and size
+   - Upload to S3
+   - Update user.avatarUrl in database
+
+2. Create frontend upload component
+   - Add file input to UserProfile component
+   - Implement image preview
+   - Add upload progress indicator
+   - Handle success/error states
+
+3. Integrate with existing user profile
+   - Display uploaded image or default avatar
+   - Add "Change image" button
+   - Add "Remove image" functionality
+
+4. Add error handling
+   - Validate file size client-side
+   - Show error messages for invalid files
+   - Handle upload failures gracefully
+```
+
+### 6. Test Plan
+
+**Rule**: Testing strategy and test cases to write.
+
+**Include**:
+- Unit tests
+- Integration tests
+- E2E tests (if applicable)
+- Edge cases
+
+**Example**:
+```
+Unit Tests:
+- File validation (type, size)
+- Image upload API endpoint
+- User profile component rendering
+
+Integration Tests:
+- Complete upload flow (frontend → backend → S3)
+- Image update flow
+- Image removal flow
+
+E2E Tests:
+- User uploads profile image
+- User updates existing image
+- User removes image
+
+Edge Cases:
+- File too large (>5MB)
+- Invalid file type
+- Network failure during upload
+- Concurrent uploads
+```
+
+### 7. Files to Modify
+
+**Rule**: List existing files that need changes.
+
+**Format**: Path with brief description of changes.
+
+**Example**:
+```
+Files to Modify:
+- src/api/users.ts
+  - Add uploadAvatar function
+  - Add deleteAvatar function
+
+- src/components/UserProfile.tsx
+  - Add image upload UI
+  - Add image display logic
+
+- src/lib/storage.ts
+  - Add S3 upload helper function
+```
+
+### 8. Files to Create
+
+**Rule**: New files that need to be created.
+
+**Format**: Path with purpose.
+
+**Example**:
+```
+Files to Create:
+- src/components/ImageUpload.tsx
+  - Reusable image upload component
+
+- src/api/upload.ts
+  - Upload route handlers
+
+- test/api/upload.test.ts
+  - Upload API tests
+
+- test/components/ImageUpload.test.tsx
+  - Upload component tests
+```
+
+### 9. Existing Utilities to Leverage
+
+**Rule**: Project utilities/helpers that can be reused.
+
+**Example**:
+```
+Utilities to Leverage:
+- @/lib/api - API client for making requests
+- @/lib/validation - File validation helpers
+- @/components/ui/Button - Button component
+- @/hooks/useUpload - File upload hook (if exists)
+```
+
+### 10. Success Criteria
+
+**Rule**: Measurable criteria for completion.
+
+**Format**: Checklist of acceptance criteria.
+
+**Example**:
+```
+Success Criteria:
+- [ ] Users can upload profile images (JPG, PNG, WebP)
+- [ ] Images are displayed in user profile
+- [ ] Users can update existing images
+- [ ] Users can remove images (revert to default)
+- [ ] File size validation works (max 5MB)
+- [ ] Invalid file types are rejected
+- [ ] Upload progress is shown to user
+- [ ] Error messages are clear and helpful
+- [ ] All tests pass
+- [ ] Code review approved
+```
+
+### 11. Out of Scope
+
+**Rule**: What won't be addressed in this implementation.
+
+**Example**:
+```
+Out of Scope:
+- Image cropping/editing
+- Multiple image uploads
+- Image compression/optimization
+- CDN integration (future enhancement)
+```
+
+### 12. Complexity & Effort Estimation
+
+**Rule**: Estimated effort with rationale.
+
+**Format**: Story points or T-shirt size with explanation.
+
+**Example**:
+```
+Estimation: Medium (5 story points)
+
+Rationale:
+- New API endpoint: 2 points
+- Frontend component: 2 points
+- Integration and testing: 1 point
+
+Risks:
+- S3 integration complexity (mitigated by existing S3 setup)
+- File upload edge cases (mitigated by comprehensive testing)
+```
+
+### 13. Dependencies
+
+**Rule**: Blocking tickets, required work, or external changes.
+
+**Example**:
+```
+Dependencies:
+- S3 bucket configuration (DevOps team)
+- User authentication system (already in place)
+- File upload service (already available)
+
+Blocking:
+- None
+
+Required:
+- S3 bucket access credentials
+```
+
+## Complete Example
+
+```markdown
+# Implementation Specification: User Profile Image Upload
+
+## 1. Issue Summary
+Issue: #456 - Add user profile image upload
+Summary: Users need to upload and update profile images.
+Priority: Medium
+
+## 2. Contextual Pointers
+Key Files:
+- src/components/UserProfile.tsx
+- src/api/users.ts
+- src/lib/storage.ts
+
+## 3. Problem Statement
+[As shown in template above]
+
+## 4. Technical Approach
+[As shown in template above]
+
+## 5. Implementation Plan
+[As shown in template above]
+
+## 6. Test Plan
+[As shown in template above]
+
+## 7. Files to Modify
+[As shown in template above]
+
+## 8. Files to Create
+[As shown in template above]
+
+## 9. Existing Utilities to Leverage
+[As shown in template above]
+
+## 10. Success Criteria
+[As shown in template above]
+
+## 11. Out of Scope
+[As shown in template above]
+
+## 12. Complexity & Effort Estimation
+[As shown in template above]
+
+## 13. Dependencies
+[As shown in template above]
+```
+
+## Best Practices
+
+### Be Specific
+
+**Rule**: Avoid vague descriptions; be concrete and actionable.
+
+**Example**:
+```
+❌ Bad: "Add image upload"
+✅ Good: "Create POST /api/users/:id/avatar endpoint that accepts multipart/form-data, validates file type (JPG/PNG/WebP) and size (<5MB), uploads to S3, and updates user.avatarUrl"
+```
+
+### Consider Edge Cases
+
+**Rule**: Think about error scenarios and edge cases.
+
+**Questions**:
+- What happens if upload fails?
+- What if user uploads invalid file?
+- What if storage is full?
+- What if user deletes account with image?
+
+### Follow TDD
+
+**Rule**: Write tests before implementation.
+
+**Reference**: See `code-quality/07_code-testing.mdc` for testing standards.
+
+### Keep It Simple
+
+**Rule**: Use KISS principle; avoid over-engineering.
+
+**Questions**:
+- Is this the simplest solution?
+- Can we reuse existing code?
+- Are we adding unnecessary complexity?
+
+### Document Decisions
+
+**Rule**: Record important decisions and rationale.
+
+**Format**: Add "Decision Log" section if significant choices were made.
+
+**Example**:
+```
+Decision Log:
+- Chose S3 over local storage for scalability
+- Chose server proxy over direct upload for security
+- Chose multer over busboy for Express integration
+```

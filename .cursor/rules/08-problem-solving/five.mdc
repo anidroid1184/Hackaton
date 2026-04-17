@@ -1,0 +1,205 @@
+---
+description: Five Whys root cause analysis technique for problem solving
+globs: ['**/*.md', 'docs/**']
+alwaysApply: false
+---
+
+# Five Whys Analysis
+
+## Core Rule
+
+**Rule**: Use the "Five Whys" technique to identify root causes, not just symptoms.
+
+## Process
+
+### 1. Define the Problem
+
+**Rule**: State the problem clearly in measurable terms.
+
+**Include**:
+- **Who**: Affected users/systems
+- **What**: Specific issue or symptom
+- **When**: Timing/frequency
+- **Where**: Location/environment
+- **Impact**: Business/technical impact
+
+**Example**:
+
+```
+Problem: Service X returns HTTP 500 for 15% of users during peak traffic
+(3-5 PM EST), causing a 10% revenue drop.
+
+Who: 15% of users
+What: HTTP 500 errors
+When: Peak traffic hours (3-5 PM EST)
+Where: Production environment
+Impact: 10% revenue drop
+```
+
+### 2. Ask "Why?" Five Times
+
+**Rule**: Ask "Why?" iteratively until reaching the root cause.
+
+**Structure**:
+1. Why did this problem occur? → Answer 1
+2. Why did Answer 1 happen? → Answer 2
+3. Why did Answer 2 happen? → Answer 3
+4. Why did Answer 3 happen? → Answer 4
+5. Why did Answer 4 happen? → Answer 5 (Root Cause)
+
+**Guidelines**:
+- ✅ Stop earlier if you reach a clear, controllable root cause
+- ✅ Go beyond five whys if the chain is still superficial
+- ✅ Phrase each answer as a factual statement supported by evidence
+- ❌ Avoid opinions or assumptions without evidence
+
+**Example**:
+
+**Problem**: Application crashes when processing large files (>100MB)
+
+1. **Why?** → The application runs out of memory
+   - *Evidence*: Memory usage spikes to 2GB then crashes
+2. **Why?** → It loads entire file into memory at once
+   - *Evidence*: Code shows `fs.readFileSync()` for entire file
+3. **Why?** → The file parser wasn't designed for streaming
+   - *Evidence*: Parser API requires full file buffer
+4. **Why?** → Initial requirements only specified small files (<10MB)
+   - *Evidence*: Requirements doc shows max 10MB
+5. **Why?** → Requirements gathering didn't consider future growth
+   - *Evidence*: No scalability analysis in requirements phase
+
+**Root Cause**: Incomplete requirements gathering process
+
+### 3. Validate Root Cause
+
+**Rule**: Verify the logical chain and ensure addressing it prevents recurrence.
+
+**Checklist**:
+- [ ] Logical chain is sound (each "why" follows from previous)
+- [ ] Root cause is controllable/addressable
+- [ ] Addressing root cause prevents recurrence
+- [ ] Multiple root causes considered if applicable
+- [ ] Evidence supports each step
+
+**Example Validation**:
+
+```
+✅ Logical: Memory issue → File loading → Parser design → Requirements → Process
+✅ Controllable: Can improve requirements process
+✅ Prevents recurrence: Better requirements catch scalability needs
+✅ Evidence: Code, logs, and requirements docs support chain
+```
+
+### 4. Develop Solutions
+
+**Rule**: Address root cause, not just symptoms.
+
+**Solution Types**:
+1. **Immediate fix**: Address symptom (short-term)
+2. **Root cause fix**: Address underlying issue (long-term)
+3. **Preventive measures**: Prevent recurrence
+4. **Systemic improvements**: Improve processes
+
+**Example**:
+
+**Root Cause**: Incomplete requirements gathering process
+
+**Solutions**:
+1. **Immediate**: Implement streaming parser for large files
+2. **Root Cause**: Add scalability analysis to requirements template
+3. **Preventive**: Include performance testing in acceptance criteria
+4. **Systemic**: Establish requirements review process with technical lead
+
+## Best Practices
+
+### Focus on Process, Not People
+
+**Rule**: Identify process/system issues, not individual blame.
+
+**Example**:
+
+```
+❌ Bad: "Developer didn't consider scalability"
+✅ Good: "Requirements process didn't include scalability analysis"
+```
+
+### Look for Systemic Issues
+
+**Rule**: Identify patterns that affect multiple areas.
+
+**Questions**:
+- Does this issue appear in other features?
+- Is this a one-time mistake or a process gap?
+- What systems/processes enable this issue?
+
+### Document the Analysis
+
+**Rule**: Record the analysis for future reference.
+
+**Format**:
+```markdown
+# Five Whys Analysis: [Issue Title]
+
+## Problem Statement
+[Clear problem definition]
+
+## Analysis Chain
+1. Why? → [Answer 1]
+2. Why? → [Answer 2]
+3. Why? → [Answer 3]
+4. Why? → [Answer 4]
+5. Why? → [Answer 5 - Root Cause]
+
+## Root Cause
+[Root cause statement]
+
+## Solutions
+- Immediate: [Short-term fix]
+- Root Cause: [Long-term fix]
+- Preventive: [Prevention measures]
+- Systemic: [Process improvements]
+```
+
+### Involve Relevant Stakeholders
+
+**Rule**: Include people with different perspectives.
+
+**Participants**:
+- Developer who wrote the code
+- Product owner who defined requirements
+- QA who tested the feature
+- DevOps who manages infrastructure
+
+### Test Solutions
+
+**Rule**: Verify solutions address root cause.
+
+**Validation**:
+- [ ] Solution addresses root cause (not just symptom)
+- [ ] Solution prevents recurrence
+- [ ] Solution is testable/measurable
+- [ ] Solution doesn't introduce new issues
+
+## Example: Complete Analysis
+
+**Problem**: User authentication fails randomly for 5% of login attempts
+
+**Analysis**:
+1. **Why?** → JWT token validation fails intermittently
+   - *Evidence*: Error logs show "Invalid token" errors
+2. **Why?** → Token signature verification fails
+   - *Evidence*: Crypto verification returns false
+3. **Why?** → Secret key used for signing doesn't match verification key
+   - *Evidence*: Different keys in signing vs verification
+4. **Why?** → Application reads secret from environment variable that changes
+   - *Evidence*: Environment variable updated without app restart
+5. **Why?** → No process to restart app after secret rotation
+   - *Evidence*: Secret rotation docs don't mention app restart
+
+**Root Cause**: Missing process for secret rotation without downtime
+
+**Solutions**:
+- **Immediate**: Restart app after secret rotation
+- **Root Cause**: Implement key rotation with zero-downtime (key versioning)
+- **Preventive**: Add secret rotation checklist
+- **Systemic**: Document all operational procedures

@@ -1,0 +1,585 @@
+---
+description: Advanced cybersecurity rules for pentesting, hardening, and security assessment
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.py', '**/*.go']
+alwaysApply: false
+---
+
+# Advanced Cybersecurity Rules
+
+## Core Rule
+
+**Rule**: Implement security by design with defense in depth and zero trust principles.
+
+## Security Assessment & Pentesting
+
+### Rule 1: Initial Reconnaissance Assessment
+
+**Rule**: Always perform reconnaissance before security assessment.
+
+**Actions**:
+
+- ✅ Use scanning tools (Nmap) to map open ports and services
+- ✅ Build infrastructure profiles before assessment
+- ✅ Perform surface discovery (Nikto, Dirb, Gobuster for web apps)
+- ✅ Enumerate hidden directories and sensitive endpoints
+
+**Tools**:
+
+```bash
+# Port scanning
+nmap -sV -p- target.com
+
+# Web application scanning
+nikto -h https://target.com
+dirb https://target.com /usr/share/wordlists/dirb/common.txt
+gobuster dir -u https://target.com -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+```
+
+**Checklist**:
+
+- [ ] Open ports identified
+- [ ] Service versions enumerated
+- [ ] Hidden directories discovered
+- [ ] Default configurations checked
+- [ ] Administrative panels identified
+
+### Rule 2: Security Audit Commands
+
+**Rule**: Run security audits regularly using appropriate tools.
+
+**Commands**:
+
+```bash
+# Node.js dependencies
+pnpm audit
+pnpm audit --fix
+
+# Python packages
+pip-audit
+
+# System packages (Debian/Ubuntu)
+apt update && apt upgrade
+
+# GitHub Security
+# Enable Dependabot in repository settings
+```
+
+**Automation**:
+
+- ✅ Enable GitHub Security features
+- ✅ Configure Dependabot for automated PRs
+- ✅ Run audits in CI pipeline
+
+**Reference**: See `10-security/security.mdc` for dependency security standards.
+
+## Protection Against Brute Force Attacks
+
+### Rule 3: Brute Force Protection Implementation
+
+**Rule**: Implement multiple layers of brute force protection.
+
+**Requirements**:
+
+- ✅ Account lockout after repeated failed attempts (e.g., 5 attempts)
+- ✅ 2FA/MFA on critical endpoints and admin interfaces
+- ✅ CAPTCHA after multiple failed attempts
+- ✅ Progressive delays between failed attempts
+
+**Example** (Express.js):
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post('/api/login', loginLimiter, async (req, res) => {
+  // Login logic
+});
+
+// Account lockout after 5 failed attempts
+const lockoutDuration = 30 * 60 * 1000; // 30 minutes
+// Store lockout state in Redis or database
+```
+
+**Example** (Next.js):
+
+```typescript
+// app/api/login/route.ts
+import { rateLimit } from '@/lib/rate-limit';
+
+export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+
+  const { success } = await rateLimit.limit(ip);
+  if (!success) {
+    return new Response('Too many requests', { status: 429 });
+  }
+
+  // Login logic
+}
+```
+
+## Secure API Key and Secrets Management
+
+### Rule 4: API Security Standards
+
+**Rule**: Never hardcode secrets; use secure vaults with rotation.
+
+**Actions**:
+
+- ✅ Use secure vaults (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
+- ✅ Rotate API keys and tokens periodically (every 90 days)
+- ✅ Limit scope and permissions for each API key
+- ✅ Enforce principle of least privilege
+- 🚫 Never hardcode API keys, passwords, or secrets in code
+- 🚫 Never commit secrets to repositories
+
+**Example** (AWS Secrets Manager):
+
+```typescript
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+} from '@aws-sdk/client-secrets-manager';
+
+const client = new SecretsManagerClient({ region: 'us-east-1' });
+
+async function getApiKey() {
+  const command = new GetSecretValueCommand({
+    SecretId: 'prod/api-key',
+  });
+
+  const response = await client.send(command);
+  return JSON.parse(response.SecretString).apiKey;
+}
+```
+
+**Example** (Environment Variables):
+
+```typescript
+// ✅ Good: Environment variables
+const apiKey = process.env.API_KEY;
+if (!apiKey) {
+  throw new Error('API_KEY environment variable is required');
+}
+
+// ❌ Bad: Hardcoded
+const apiKey = 'sk_live_1234567890abcdef';
+```
+
+**Reference**: See `security/security.mdc` for secret management.
+
+## System Hardening Requirements
+
+### Rule 5: Hardening Implementation
+
+**Definition**: Hardening is strengthening system security by reducing attack surface.
+
+**Core Principle**: Minimize risks by leaving only what is strictly necessary.
+
+#### Operating System Hardening
+
+**Actions**:
+
+- ✅ Disable unused services and processes
+- ✅ Apply security patches regularly
+- ✅ Configure firewalls with deny-by-default policies
+- ✅ Implement access controls and user permission restrictions
+
+**Example** (Linux):
+
+```bash
+# Disable unused services
+systemctl disable telnet
+systemctl disable ftp
+
+# Configure firewall (UFW)
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw enable
+```
+
+#### Web Application Hardening
+
+**Actions**:
+
+- ✅ Disable insecure endpoints and debug modes in production
+- ✅ Enforce HTTPS for all communications
+- ✅ Configure security headers (CSP, HSTS, X-Frame-Options)
+- ✅ Implement input validation and output encoding
+
+**Example** (Express.js):
+
+```typescript
+// Disable debug mode in production
+if (process.env.NODE_ENV === 'production') {
+  app.set('env', 'production');
+  // Disable X-Powered-By header
+  app.disable('x-powered-by');
+}
+
+// Security headers middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+  next();
+});
+```
+
+#### Database Hardening
+
+**Actions**:
+
+- ✅ Restrict user privileges to minimum required
+- ✅ Enforce strong authentication mechanisms
+- ✅ Encrypt connections and sensitive data at rest
+- ✅ Disable unnecessary database features
+
+**Example** (PostgreSQL):
+
+```sql
+-- Create user with minimal privileges
+CREATE USER app_user WITH PASSWORD 'strong_password';
+GRANT SELECT, INSERT, UPDATE ON TABLE users TO app_user;
+-- Don't grant DELETE or DROP privileges unless necessary
+
+-- Enable SSL
+ALTER SYSTEM SET ssl = on;
+```
+
+#### Network Hardening
+
+**Actions**:
+
+- ✅ Implement network segmentation and VLANs
+- ✅ Deploy IDS/IPS monitoring systems
+- ✅ Configure strict firewall and router rules
+- ✅ Monitor network traffic for anomalies
+
+## FastAPI Security Implementation
+
+### Rule 6: API Input Validation (A03 - Injection Prevention)
+
+**Rule**: Use Pydantic for robust data validation.
+
+**Example**:
+
+```python
+from pydantic import BaseModel, EmailStr, validator
+import re
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+    @validator('username')
+    def validate_username(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', v):
+            raise ValueError('Username must be 3-20 alphanumeric characters')
+        return v
+
+    @validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain lowercase letter')
+        if not re.search(r'\d', v):
+            raise ValueError('Password must contain number')
+        return v
+
+@app.post("/users")
+async def create_user(user: UserCreate):
+    # Validated data is safe to use
+    return {"message": "User created", "username": user.username}
+```
+
+**Required Validations**:
+
+- ✅ Strong typing with custom validators
+- ✅ Automatic sanitization with regex patterns
+- ✅ Length control (min/max)
+- ✅ Format validation (email, phone, URL)
+
+### Rule 7: SQL Injection Prevention
+
+**Rule**: Always use parameterized queries; never concatenate user input.
+
+**Example** (Vulnerable):
+
+```python
+# ❌ VULNERABLE: String concatenation
+email = request.form.get('email')
+query = f"SELECT * FROM users WHERE email='{email}'"
+# Attack: email = "admin@test.com'; DROP TABLE users; --"
+```
+
+**Example** (Secure - SQLAlchemy):
+
+```python
+# ✅ Secure: Parameterized query
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+def get_user_by_email(db: Session, email: str):
+    stmt = select(User).where(User.email == email)
+    return db.execute(stmt).scalar_one_or_none()
+```
+
+**Example** (Secure - Raw SQL):
+
+```python
+# ✅ Secure: Parameterized query with raw SQL
+query = "SELECT * FROM users WHERE email=:email"
+result = db.execute(query, {"email": email})
+```
+
+## Frontend Security (Next.js 15)
+
+### Rule 8: XSS and CSRF Protection
+
+**XSS Prevention**:
+
+**Rule**: Sanitize all user input before rendering.
+
+**Example**:
+
+```tsx
+import DOMPurify from 'dompurify';
+
+function UserContent({ content }: { content: string }) {
+  // ✅ Sanitize before rendering
+  const sanitized = DOMPurify.sanitize(content);
+  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />;
+}
+```
+
+**CSRF Protection**:
+
+**Rule**: Next.js 15 automatically protects Server Actions with CSRF tokens.
+
+**Example**:
+
+```tsx
+// app/actions/user.ts
+'use client';
+
+import { useFormState } from 'react-dom';
+
+export async function updateUser(formData: FormData) {
+  // Next.js automatically includes CSRF token
+  // No manual token handling needed
+}
+```
+
+**Secure Cookies**:
+
+**Example**:
+
+```typescript
+// Next.js cookie configuration
+import { cookies } from 'next/headers';
+
+cookies().set('session', token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 60 * 60 * 24, // 24 hours
+});
+```
+
+## Core Security Concepts
+
+### Rule 9: Rate Limiting and Throttling
+
+**Rule**: Prevent abuse and DoS by limiting requests per IP/token.
+
+**Example** (Express.js):
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: 'Too many requests from this IP',
+});
+
+app.use('/api/', apiLimiter);
+```
+
+**Example** (Next.js):
+
+```typescript
+// lib/rate-limit.ts
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+export const rateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
+});
+```
+
+### Rule 10: Strict Input/Output Validation
+
+**Rule**: Reject invalid payloads; sanitize all inputs.
+
+**Example**:
+
+```typescript
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  email: z.string().email(),
+  age: z.number().int().min(18).max(120),
+  name: z.string().min(1).max(100),
+});
+
+// Reject invalid input
+function createUser(input: unknown) {
+  const validated = UserSchema.parse(input); // Throws if invalid
+  // Safe to use validated data
+}
+```
+
+### Rule 11: Secure Authentication and Authorization
+
+**Rule**: Use JWT with short expiration and controlled refresh tokens.
+
+**Example**:
+
+```typescript
+import jwt from 'jsonwebtoken';
+
+// Access token: 15 minutes
+const accessToken = jwt.sign(
+  { userId: user.id, role: user.role },
+  process.env.JWT_SECRET!,
+  { expiresIn: '15m' }
+);
+
+// Refresh token: 7 days
+const refreshToken = jwt.sign(
+  { userId: user.id, type: 'refresh' },
+  process.env.JWT_REFRESH_SECRET!,
+  { expiresIn: '7d' }
+);
+```
+
+## Fundamental Security Principles
+
+> **Note**: Core principles (Security by Design, Defense in Depth, Least Privilege, Fail Securely, Zero Trust) are defined in `10-security/security.mdc`. This file covers advanced implementation patterns only.
+
+## Content Security Policy (CSP)
+
+### Rule 17: CSP Implementation
+
+**Rule**: Define allowed script sources to prevent XSS.
+
+**Example**:
+
+```typescript
+// Express.js
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+```
+
+**Next.js** (next.config.js):
+
+```javascript
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value:
+      "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline';",
+  },
+];
+```
+
+## Data Protection and Sessions
+
+### Rule 18: Cookie Security
+
+**Rule**: Use secure cookie flags.
+
+**Example**:
+
+```typescript
+// Secure cookie configuration
+res.cookie('session', token, {
+  httpOnly: true, // Prevents JavaScript access
+  secure: true, // HTTPS only
+  sameSite: 'strict', // CSRF protection
+  maxAge: 3600000, // 1 hour
+});
+```
+
+### Rule 19: HTTPS Enforcement
+
+**Rule**: Encrypt all sensitive data in transit.
+
+**Actions**:
+
+- ✅ Always use HTTPS in production
+- ✅ Redirect HTTP to HTTPS
+- ✅ Use HSTS header
+- 🚫 Never transmit credentials over HTTP
+
+**Example** (Next.js middleware):
+
+```typescript
+// middleware.ts
+export function middleware(request: NextRequest) {
+  if (request.nextUrl.protocol === 'http:') {
+    return NextResponse.redirect(
+      `https://${request.nextUrl.hostname}${request.nextUrl.pathname}`
+    );
+  }
+}
+```
+
+## Implementation Priority
+
+### Critical (Implement First)
+
+1. Input validation and SQL injection prevention
+2. HTTPS enforcement
+3. Secure authentication (JWT + 2FA)
+4. API key management
+
+### High Priority
+
+1. Rate limiting
+2. CSP headers
+3. System hardening
+4. Brute force protection
+
+### Medium Priority
+
+1. Advanced monitoring
+2. Network segmentation
+3. Regular security audits
+
+**Reference**: See `10-security/security.mdc` for core security standards.

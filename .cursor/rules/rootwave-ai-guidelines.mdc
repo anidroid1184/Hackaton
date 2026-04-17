@@ -1,14 +1,37 @@
 ---
-description: Rootwave — AGENTS, caveman, pre-commit, Edge-first, TS sync, CORS local
+description: Rootwave — docs/, caveman, Engram, pre-commit, Edge-first, TS↔API
 alwaysApply: true
 ---
 
 # Rootwave AI Guidelines
 
-## Core Directives
-1. READ FIRST: Siempre lee `docs/AGENTS.md` y `context.md` antes de escribir o modificar código.
-2. CAVEMAN MODE: Respuestas directas, sin explicaciones largas, X→Y, código crudo. Español rioplatense.
-3. PRE-COMMIT FALLBACK: Si un commit falla por el pre-commit (ruff, eslint, mypy), DEBES leer el log del error, solucionarlo en el archivo afectado y volver a intentar el commit automáticamente. NUNCA abortes silenciosamente ni reintentes a ciegas sin corregir.
-4. ARCHITECTURE PRIORITIES (EDGE FIRST): Para lógica ligera, webhooks o integraciones de terceros (IA, emails), prioriza SIEMPRE usar **Supabase Edge Functions** (Deno/TS). Solo delega a **FastAPI** cálculos de ingeniería complejos, procesamiento pesado o transacciones que requieran librerías estrictas de Python.
-5. TYPESCRIPT SYNC: Los tipos en React deben ser un espejo exacto del OpenAPI/Pydantic del backend.
-6. CORS LOCAL: Configurar `allow_origins=["*"]` en FastAPI exclusivamente para el entorno de desarrollo local.
+## Precedencia
+
+1. `docs/` (obligatorio: `docs/AGENTS.md`, `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`; `docs/context.md` es índice **provisional** — completar con el resto de `docs/` según la tarea)
+2. Esta regla (`rootwave-ai-guidelines`)
+3. Resto del hub `.cursor/rules/` — si choca con `docs/`, gana `docs/`
+
+## Lectura previa
+
+Antes de escribir o modificar código: `docs/AGENTS.md`; `docs/context.md` si existe (índice aún incompleto — no sustituye revisar `docs/` y código).
+
+## Caveman (default)
+
+Alineado con `docs/AGENTS.md`: compresión, `X→Y`, sin relleno, código directo; español rioplatense. No activar modo “humanizer” salvo que el usuario pida texto natural largo.
+
+## Engram (memoria persistente)
+
+- Inicio de sesión relevante: `mem_context` si el contexto importa.
+- Tras decisiones de arquitectura, convenciones, bugs o descubrimientos: `mem_save` (no esperar a que lo pidan).
+- Antes de re-decidir algo ya resuelto: `mem_search`.
+
+## Pre-commit
+
+Si falla pre-commit (ruff, eslint, mypy, etc.): leer log → corregir causa raíz en el archivo → reintentar. Tras **dos** fallos seguidos sin avance: parar y reportar comando + extracto de log (ver `docs/AGENTS.md`).
+
+## Arquitectura
+
+- Backend: **solo** Routers → Domain → Database (`docs/ARCHITECTURE.md`). No saltar capas.
+- **Edge-first:** lógica ligera, webhooks, integraciones (IA, email) → **Supabase Edge Functions** (Deno/TS). **FastAPI** para carga pesada, ingeniería compleja o librerías solo Python.
+- **Tipos:** React/TS alineados con OpenAPI/Pydantic del backend.
+- **CORS:** `allow_origins=["*"]` en FastAPI solo en desarrollo local.

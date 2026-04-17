@@ -1,0 +1,114 @@
+---
+description: Performance analysis and optimization guidelines
+globs: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx']
+alwaysApply: false
+---
+
+# Performance Standards
+
+## Checkpoints
+
+**Rule**: Identify and optimize performance bottlenecks.
+
+**Checkpoints**:
+- Functions with O(n²) or worse complexity
+- Unnecessary re-renders in React components
+- Large bundle sizes (>500KB initial load)
+- Database queries without indexes
+- Memory leaks (unclosed subscriptions, timers)
+
+## Tools
+
+- Chrome DevTools Performance tab
+- `webpack-bundle-analyzer` for bundle analysis
+- `@sentry/profiling-node` for Node.js profiling
+- React DevTools Profiler for React components
+
+## Algorithm Complexity
+
+**Rule**: Prefer O(n) or O(log n) over O(n²).
+
+**Example**:
+
+```typescript
+// ❌ O(n²) complexity
+function findDuplicates(arr: string[]) {
+  return arr.filter((item, index) => arr.indexOf(item) !== index);
+}
+
+// ✅ O(n) complexity
+function findDuplicates(arr: string[]) {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  arr.forEach((item) => {
+    if (seen.has(item)) duplicates.add(item);
+    seen.add(item);
+  });
+  return Array.from(duplicates);
+}
+```
+
+## React Performance
+
+**Rule**: Prevent unnecessary re-renders.
+
+**Examples**:
+
+```typescript
+// ❌ Re-renders on every parent update
+function UserList({ users }: { users: User[] }) {
+  return users.map(user => <UserCard key={user.id} user={user} />);
+}
+
+// ✅ Memoize expensive computations
+import { useMemo } from 'react';
+
+function UserList({ users }: { users: User[] }) {
+  const sortedUsers = useMemo(
+    () => users.sort((a, b) => a.name.localeCompare(b.name)),
+    [users]
+  );
+  return sortedUsers.map(user => <UserCard key={user.id} user={user} />);
+}
+
+// ✅ Memoize components
+import { memo } from 'react';
+
+const UserCard = memo(({ user }: { user: User }) => {
+  return <div>{user.name}</div>;
+});
+```
+
+## Memory Leaks
+
+**Rule**: Always clean up subscriptions and timers.
+
+**Example**:
+
+```typescript
+// ❌ Memory leak
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchData();
+  }, 1000);
+  // Missing cleanup
+}, []);
+
+// ✅ Proper cleanup
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchData();
+  }, 1000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+## Bundle Size
+
+**Rule**: Keep initial bundle under 500KB.
+
+**Actions**:
+- Use code splitting: `React.lazy()` for routes
+- Tree-shake unused code
+- Analyze bundle: `webpack-bundle-analyzer`
+- Remove unused dependencies

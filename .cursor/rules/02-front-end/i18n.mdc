@@ -1,0 +1,29 @@
+---
+description: "Internationalization: locales, translation keys, fallbacks, next-i18next"
+alwaysApply: false
+---
+## Internationalization (i18n)
+
+### File Structure
+```
+src/
+  locales/
+    en/
+      common.json
+    es/
+      common.json
+```
+
+### Key Conventions
+- Snake_case keys (`welcome_message`).
+- Avoid concatenated strings; use interpolation (`{{name}}`).
+
+### Fallback Strategy
+- Default locale `en`; fallback chain defined in config.
+
+### Runtime
+- Use `next-i18next` or `react-intl` provider.
+- Detect locale via `Accept-Language` header or user preference.
+
+### Testing
+- Unit test missing keys (`i18n-tester`), fail CI if untranslated.

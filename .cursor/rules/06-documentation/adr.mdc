@@ -1,0 +1,27 @@
+---
+description: "Architecture Decision Records: template and guidelines for documenting significant decisions"
+globs: ["docs/adr/**", "docs/architecture/**"]
+alwaysApply: false
+---
+## ADR Process
+
+### Template (docs/adr/YYYYMMDD-title.md)
+```
+# Status
+Proposed | Accepted | Deprecated | Superseded by ADR-XXX
+
+# Context
+Why is this decision needed?
+
+# Decision
+The choice made.
+
+# Consequences
+Trade-offs, positive/negative effects.
+```
+
+### Guidelines
+- One ADR per significant architectural decision.
+- Include alternatives considered and reasoning.
+- Link ADR from affected README/docs.
+- Review ADRs every 12 months for relevance.

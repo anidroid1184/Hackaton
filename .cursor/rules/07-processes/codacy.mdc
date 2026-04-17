@@ -1,0 +1,88 @@
+---
+description: 'Codacy MCP integration: pattern queries, tool discovery, and code quality insights via API'
+alwaysApply: false
+---
+# Codacy MCP Rules
+
+Configuration for AI behavior when interacting with Codacy's MCP Server.
+
+> **Important**: This workspace uses Codacy exclusively through the MCP API tools (`codacy_list_tools`, `codacy_get_pattern`). Local CLI analysis (`codacy_cli_analyze`) is NOT used because it requires Docker/WSL on Windows. For local linting use ESLint directly; for security scanning use Trivy directly.
+
+## Available MCP tools and when to use them
+
+| Tool                 | Works on Windows | Purpose                                                  |
+| -------------------- | ---------------- | -------------------------------------------------------- |
+| `codacy_list_tools`  | Yes              | Discover available analysis tools and their capabilities |
+| `codacy_get_pattern` | Yes              | Get full details of a specific lint/security pattern     |
+| `codacy_cli_analyze` | No (needs WSL)   | Local analysis -- **do NOT call this tool**              |
+| `codacy_cli_install` | No (needs WSL)   | CLI installer -- **do NOT call this tool**               |
+
+## When to use Codacy MCP
+
+### Pattern lookup
+
+- When the user asks about a specific linting rule or security pattern, use `codacy_get_pattern` with the pattern ID and tool UUID
+- Present the pattern explanation so the user understands why an issue matters
+- Use the pattern details to propose targeted fixes
+
+### Tool discovery
+
+- When the user asks what analysis tools Codacy supports, run `codacy_list_tools`
+- Use results to recommend the right tool for their stack (eslint for JS/TS, pylint for Python, pmd for Java, etc.)
+
+### Code review context
+
+- During PR reviews, if a pattern name or rule ID is mentioned, look it up with `codacy_get_pattern` for full context
+- Cross-reference Codacy patterns with project ESLint config to check for gaps
+
+## What NOT to do
+
+- **Do NOT call `codacy_cli_analyze`** -- it will fail with "CLI on Windows is not supported without WSL"
+- **Do NOT call `codacy_cli_install`** -- same limitation
+- **Do NOT suggest installing Codacy CLI** via brew, npm, npx, or any package manager
+- **Do NOT block workflow** waiting for Codacy analysis that will never complete
+
+## Local analysis alternatives
+
+Instead of Codacy CLI, use these tools directly (already configured in pre-commit hooks):
+
+| Need                       | Tool          | How                                                   |
+| -------------------------- | ------------- | ----------------------------------------------------- |
+| JS/TS linting              | ESLint        | `pnpm lint` or via lint-staged                        |
+| Code formatting            | Prettier      | `pnpm format:check` or via lint-staged                |
+| Type checking              | TypeScript    | `tsc --noEmit`                                        |
+| Secret scanning            | Trivy         | `trivy fs --scanners secret .`                        |
+| Dependency vulnerabilities | Trivy         | `trivy fs --scanners vuln --severity HIGH,CRITICAL .` |
+| Code health                | CodeScene MCP | `code_health_score` / `code_health_review`            |
+
+## Severity-based response policy
+
+When reviewing code or patterns from Codacy:
+
+- **Critical / High** (security vulnerabilities, SQL injection, XSS): Flag immediately, block merge if in PR review
+- **Medium** (code smells, potential bugs, deprecated API usage): Note and suggest fix
+- **Low / Info** (style, minor naming): Mention only if relevant to current work
+
+## When Codacy MCP tools are unavailable
+
+- Reset the MCP server in Cursor settings (Settings > MCP)
+- Verify the Codacy MCP server is enabled and running
+- Restart Cursor if the server appears stuck
+- If none work, continue without Codacy -- fall back to ESLint + Trivy for local analysis
+
+## Whenever a Codacy tool returns a 404 error
+
+- The repository may not be configured in Codacy
+- Suggest adding the repository through the Codacy web dashboard (codacy.com)
+- This is optional -- local tools (ESLint, Trivy, CodeScene) cover the core needs
+
+## Coordination with other tools
+
+| Tool                  | Responsibility                                       | Where it runs                 |
+| --------------------- | ---------------------------------------------------- | ----------------------------- |
+| **Codacy MCP**        | Pattern/rule queries, tool discovery                 | Cursor agent (API calls)      |
+| **Codacy Web**        | Historical dashboard, PR analysis, trends            | codacy.com (optional)         |
+| **CodeScene MCP**     | Code health, complexity, auto-refactoring, tech debt | Cursor agent (local)          |
+| **ESLint + Prettier** | Linting + formatting                                 | Pre-commit hook (lint-staged) |
+| **Trivy**             | Secrets + dependency vulnerabilities                 | Pre-commit hook + manual      |
+| **TypeScript**        | Type checking                                        | Pre-commit hook               |

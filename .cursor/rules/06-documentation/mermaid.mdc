@@ -1,0 +1,259 @@
+---
+description: Mermaid diagram generation standards and best practices
+globs: ['**/*.md', '**/*.mdx', 'docs/**']
+alwaysApply: false
+---
+
+# Mermaid Diagram Generation
+
+## Core Rule
+
+**Rule**: Use Mermaid diagrams to visualize code structure, relationships, and processes in documentation.
+
+## Supported Diagram Types
+
+### 1. Entity Relationship Diagrams (ERD)
+
+**Use Case**: Database schemas and data models.
+
+**Example**:
+
+```mermaid
+erDiagram
+    USER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : "ordered in"
+
+    USER {
+        string id PK
+        string email
+        string name
+        datetime created_at
+    }
+    ORDER {
+        string id PK
+        string user_id FK
+        decimal total
+        datetime created_at
+    }
+```
+
+**Syntax Reference**: https://mermaid.js.org/syntax/entityRelationshipDiagram.html
+
+### 2. Flowcharts
+
+**Use Case**: Process flows and decision logic.
+
+**Example**:
+
+```mermaid
+flowchart TD
+    A[User Login] --> B{Valid Credentials?}
+    B -->|Yes| C[Generate JWT Token]
+    B -->|No| D[Return Error 401]
+    C --> E[Store Session]
+    E --> F[Redirect to Dashboard]
+    D --> G[End]
+    F --> G
+```
+
+**Syntax Reference**: https://mermaid.js.js/syntax/flowchart.html
+
+### 3. Sequence Diagrams
+
+**Use Case**: Interaction flows between components.
+
+**Example**:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Database
+    participant AuthService
+
+    Client->>API: POST /api/login
+    API->>AuthService: validateCredentials()
+    AuthService->>Database: query user
+    Database-->>AuthService: user data
+    AuthService-->>API: JWT token
+    API-->>Client: 200 OK + token
+```
+
+**Syntax Reference**: https://mermaid.js.org/syntax/sequenceDiagram.html
+
+### 4. Class Diagrams
+
+**Use Case**: Object-oriented design and class relationships.
+
+**Example**:
+
+```mermaid
+classDiagram
+    class User {
+        -string id
+        -string email
+        -string name
+        +create()
+        +update()
+        +delete()
+    }
+    class Order {
+        -string id
+        -string userId
+        -decimal total
+        +calculateTotal()
+    }
+    User "1" --> "*" Order : places
+```
+
+**Syntax Reference**: https://mermaid.js.org/syntax/classDiagram.html
+
+### 5. State Diagrams
+
+**Use Case**: State machines and state transitions.
+
+**Example**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Review: submit
+    Review --> Approved: approve
+    Review --> Draft: reject
+    Approved --> Published: publish
+    Published --> [*]
+```
+
+**Syntax Reference**: https://mermaid.js.org/syntax/stateDiagram.html
+
+## Generation Process
+
+**Rule**: Follow this process when generating Mermaid diagrams.
+
+**Steps**:
+
+1. **Analyze source**: Read code/SQL/docs to identify entities and relationships
+2. **Choose diagram type**: Select appropriate type based on use case
+3. **Extract entities**: Identify all relevant entities, classes, or components
+4. **Map relationships**: Document relationships with proper cardinality
+5. **Add properties**: Include key properties/methods where relevant
+6. **Validate syntax**: Test with Mermaid CLI before committing
+7. **Save to docs**: Place in appropriate documentation location
+
+## Validation
+
+**Rule**: Always validate Mermaid syntax before committing.
+
+**Command**:
+
+```bash
+# Install Mermaid CLI (one-time)
+pnpm add -g @mermaid-js/mermaid-cli
+
+# Validate diagram
+mmdc -i docs/diagram.md -o /dev/null
+
+# Or use npx (no installation needed)
+npx -p @mermaid-js/mermaid-cli mmdc -i docs/diagram.md -o /dev/null
+```
+
+**Reference**: https://github.com/mermaid-js/mermaid-cli
+
+## Best Practices
+
+### Readability
+
+**Rule**: Keep diagrams focused and readable.
+
+**Guidelines**:
+
+- ✅ Limit to 10-15 entities per diagram
+- ✅ Use descriptive names (not abbreviations)
+- ✅ Group related entities with subgraphs
+- ✅ Add labels to relationships
+- ❌ Avoid overly complex diagrams (split into multiple)
+
+**Example**:
+
+```mermaid
+flowchart TD
+    subgraph "Authentication"
+        A[Login] --> B[Validate]
+    end
+    subgraph "Authorization"
+        C[Check Permissions] --> D[Grant Access]
+    end
+    B --> C
+```
+
+### Naming Conventions
+
+**Rule**: Use consistent naming conventions.
+
+**Guidelines**:
+
+- Use PascalCase for classes/entities: `User`, `OrderItem`
+- Use camelCase for methods: `getUserById()`, `calculateTotal()`
+- Use UPPER_SNAKE_CASE for constants: `MAX_RETRIES`, `API_TIMEOUT`
+- Use descriptive relationship labels: `"places"`, `"contains"`, `"belongs to"`
+
+### Cardinality
+
+**Rule**: Always include cardinality in ERDs.
+
+**Notation**:
+
+- `||--o{` : One to many (optional)
+- `||--||` : One to one (required)
+- `}o--o{` : Many to many
+- `||--o|` : One to many (one required)
+
+### Styling
+
+**Rule**: Use styling for clarity and emphasis.
+
+**Example**:
+
+```mermaid
+flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Success| C[Process]
+    B -->|Error| D[Handle Error]
+
+    style A fill:#90EE90
+    style D fill:#FF6B6B
+    style C fill:#4ECDC4
+```
+
+## File Organization
+
+**Rule**: Organize diagrams in documentation structure.
+
+**Location**: `docs/diagrams/` or inline in relevant documentation files.
+
+**Naming**: `{feature}-{diagram-type}.md` (e.g., `auth-sequence.md`, `database-erd.md`)
+
+**Reference in docs**: Link to diagrams from relevant documentation:
+
+```markdown
+See [Authentication Flow](./diagrams/auth-sequence.md) for detailed interaction flow.
+```
+
+## Integration with Documentation
+
+**Rule**: Embed diagrams in Markdown files using code blocks.
+
+**Format**:
+
+````markdown
+## Architecture Overview
+
+```mermaid
+flowchart TD
+    A[Client] --> B[API Gateway]
+    B --> C[Services]
+```
+````
+
+**Rendering**: Most Markdown renderers (GitHub, GitLab, VS Code) support Mermaid natively.

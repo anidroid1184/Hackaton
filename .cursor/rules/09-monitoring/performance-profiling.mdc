@@ -1,0 +1,433 @@
+---
+description: Performance optimization and profiling guidelines for web applications
+globs: ['**/*.tsx', '**/*.ts', '**/*.js', 'webpack.config.*', 'next.config.*', 'vite.config.*']
+alwaysApply: false
+---
+
+# Performance & Profiling
+
+## Core Rule
+
+**Rule**: Monitor and optimize Core Web Vitals; keep bundle sizes under 250KB gzipped.
+
+## Core Web Vitals (Required)
+
+**Rule**: Meet Google's Core Web Vitals thresholds.
+
+**Targets**:
+- **LCP** (Largest Contentful Paint): ≤2.5s
+- **FID** (First Input Delay): ≤100ms
+- **CLS** (Cumulative Layout Shift): ≤0.1
+
+**Implementation**:
+
+```typescript
+// lib/web-vitals.ts
+import { getCLS, getFID, getLCP, onCLS, onFID, onLCP } from 'web-vitals';
+
+function sendToAnalytics(metric: any) {
+  // Send to your analytics service
+  console.log(metric);
+
+  // Example: Send to Google Analytics
+  // gtag('event', metric.name, {
+  //   value: Math.round(metric.value),
+  //   event_label: metric.id,
+  //   non_interaction: true,
+  // });
+}
+
+// Measure all Core Web Vitals
+onCLS(sendToAnalytics);
+onFID(sendToAnalytics);
+onLCP(sendToAnalytics);
+```
+
+**Next.js Integration**:
+
+```typescript
+// app/layout.tsx or pages/_app.tsx
+import { Analytics } from '@vercel/analytics/react';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <Analytics />
+      </body>
+    </html>
+  );
+}
+```
+
+## React Performance Patterns
+
+### Memoization
+
+**Rule**: Memoize expensive computations and components.
+
+**Example**:
+
+```tsx
+import { useMemo, memo } from 'react';
+
+// ✅ Good: Memoize expensive computations
+function UserList({ users }: { users: User[] }) {
+  const sortedUsers = useMemo(
+    () => users.sort((a, b) => a.name.localeCompare(b.name)),
+    [users]
+  );
+
+  return (
+    <ul>
+      {sortedUsers.map((user) => (
+        <UserItem key={user.id} user={user} />
+      ))}
+    </ul>
+  );
+}
+
+// ❌ Bad: Recalculate on every render
+function UserList({ users }: { users: User[] }) {
+  const sortedUsers = users.sort((a, b) => a.name.localeCompare(b.name));
+  // ...
+}
+
+// ✅ Good: Memoize components
+const UserItem = memo(({ user }: { user: User }) => {
+  return <li>{user.name}</li>;
+});
+```
+
+### Code Splitting
+
+**Rule**: Lazy load heavy components and routes.
+
+**Example**:
+
+```tsx
+import { lazy, Suspense } from 'react';
+
+// ✅ Good: Lazy load heavy components
+const HeavyComponent = lazy(() => import('./HeavyComponent'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HeavyComponent />
+    </Suspense>
+  );
+}
+
+// ✅ Good: Route-based splitting
+import { lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+### Image Optimization
+
+**Rule**: Optimize images with lazy loading and proper formats.
+
+**Example**:
+
+```tsx
+// ✅ Good: Lazy loading
+<img
+  src="hero.jpg"
+  loading="lazy"
+  alt="Hero image"
+  width={800}
+  height={600}
+/>
+
+// ✅ Good: Next.js Image component
+import Image from 'next/image';
+
+<Image
+  src="/hero.jpg"
+  width={800}
+  height={600}
+  alt="Hero image"
+  priority // For above-the-fold images
+  placeholder="blur" // Optional blur placeholder
+/>
+
+// ✅ Good: Responsive images
+<Image
+  src="/hero.jpg"
+  width={800}
+  height={600}
+  alt="Hero image"
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+/>
+```
+
+## Bundle Optimization
+
+**Rule**: Keep main bundle under 250KB gzipped.
+
+### Bundle Analysis
+
+**Next.js**:
+
+```bash
+# Analyze bundle size
+ANALYZE=true pnpm build
+
+# Or use @next/bundle-analyzer
+```
+
+**Webpack**:
+
+```bash
+# Generate stats
+webpack --profile --json > dist/stats.json
+
+# Analyze
+npx webpack-bundle-analyzer dist/stats.json
+```
+
+**Vite**:
+
+```bash
+# Build with analysis
+pnpm build --mode analyze
+
+# Or use rollup-plugin-visualizer
+```
+
+### Optimization Strategies
+
+**Actions**:
+- ✅ Use dynamic imports for large dependencies
+- ✅ Tree-shake unused code
+- ✅ Remove duplicate dependencies
+- ✅ Use CDN for large libraries (if appropriate)
+
+**Example**:
+
+```typescript
+// ✅ Good: Dynamic import for large library
+const loadChart = async () => {
+  const { Chart } = await import('chart.js');
+  return Chart;
+};
+
+// ❌ Bad: Static import of large library
+import Chart from 'chart.js'; // Loads even if not used
+```
+
+## Memory Profiling
+
+**Rule**: Profile memory usage and fix leaks.
+
+### Chrome DevTools
+
+**Steps**:
+1. Open Chrome DevTools → Performance tab
+2. Click Record
+3. Perform actions
+4. Stop recording
+5. Analyze:
+   - Long tasks (>50ms)
+   - Memory leaks (increasing heap size)
+   - Unnecessary re-renders
+
+### Common Memory Leaks
+
+**Example**:
+
+```tsx
+// ❌ Bad: Memory leak (missing cleanup)
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchData();
+  }, 1000);
+  // Missing cleanup - interval never cleared
+}, []);
+
+// ✅ Good: Proper cleanup
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchData();
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
+
+// ❌ Bad: Event listener leak
+useEffect(() => {
+  window.addEventListener('scroll', handleScroll);
+  // Missing cleanup
+}, []);
+
+// ✅ Good: Cleanup event listener
+useEffect(() => {
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+```
+
+### Memory Profiling Tools
+
+**Tools**:
+- Chrome DevTools Memory tab
+- React DevTools Profiler
+- `@sentry/profiling-node` for Node.js
+
+**Example** (React Profiler):
+
+```tsx
+import { Profiler } from 'react';
+
+function onRenderCallback(id, phase, actualDuration) {
+  console.log('Component:', id, 'Phase:', phase, 'Duration:', actualDuration);
+}
+
+<Profiler id="App" onRender={onRenderCallback}>
+  <App />
+</Profiler>
+```
+
+## Server Performance
+
+**Rule**: Monitor and optimize server-side performance.
+
+### Caching
+
+**Strategies**:
+- ✅ CDN for static assets
+- ✅ HTTP 304 (Not Modified) for conditional requests
+- ✅ Redis for API response caching
+- ✅ Database query caching
+
+**Example** (Next.js):
+
+```typescript
+// app/api/users/route.ts
+import { NextResponse } from 'next/server';
+import { redis } from '@/lib/redis';
+
+export async function GET() {
+  // Check cache
+  const cached = await redis.get('users:list');
+  if (cached) {
+    return NextResponse.json(JSON.parse(cached));
+  }
+
+  // Fetch from database
+  const users = await db.users.findMany();
+
+  // Cache for 5 minutes
+  await redis.setex('users:list', 300, JSON.stringify(users));
+
+  return NextResponse.json(users);
+}
+```
+
+### Database Optimization
+
+**Actions**:
+- ✅ Use connection pooling
+- ✅ Add database indexes
+- ✅ Use prepared statements
+- ✅ Monitor slow queries
+
+**Example** (Connection Pooling):
+
+```typescript
+// lib/db.ts
+import { Pool } from 'pg';
+
+export const pool = new Pool({
+  max: 20, // Maximum pool size
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+```
+
+### Monitoring
+
+**Rule**: Monitor p95/p99 latency and alert on deviations.
+
+**Metrics to Track**:
+- Request latency (p50, p95, p99)
+- Error rate
+- Throughput (requests per second)
+- Database query time
+- Memory usage
+- CPU usage
+
+**Example** (Prometheus Metrics):
+
+```typescript
+import promClient from 'prom-client';
+
+const httpRequestDuration = new promClient.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status'],
+});
+
+// Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    httpRequestDuration.observe(
+      {
+        method: req.method,
+        route: req.route?.path || req.path,
+        status: res.statusCode,
+      },
+      duration
+    );
+  });
+  next();
+});
+```
+
+**Alerting**:
+- Alert on >20% baseline deviation
+- Alert on p95 latency > threshold
+- Alert on error rate > 1%
+
+## Performance Budget
+
+**Rule**: Set and enforce performance budgets.
+
+**Targets**:
+- Main bundle: <250KB gzipped
+- Total initial load: <500KB gzipped
+- Time to Interactive (TTI): <3.5s
+- First Contentful Paint (FCP): <1.8s
+
+**Enforcement** (webpack-bundle-analyzer):
+
+```javascript
+// webpack.config.js
+module.exports = {
+  performance: {
+    maxAssetSize: 250000, // 250KB
+    maxEntrypointSize: 250000,
+    hints: 'error',
+  },
+};
+```
+
+**Reference**: See `code-quality/06_code-performance.mdc` for performance standards.
