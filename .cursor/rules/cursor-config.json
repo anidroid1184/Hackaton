@@ -104,20 +104,22 @@
     "javascript": {
       "framework": "react",
       "bundler": "vite",
-      "packageManager": "pnpm",
+      "packageManager": "npm",
       "linter": "eslint",
       "formatter": "prettier"
     },
     "python": {
       "framework": "fastapi",
+      "packageManager": "uv",
       "linter": "ruff",
       "formatter": "ruff",
-      "typeChecker": "mypy"
+      "typeChecker": "mypy",
+      "runPrefix": "uv run"
     },
     "typescript": {
       "framework": "react",
       "bundler": "vite",
-      "packageManager": "pnpm",
+      "packageManager": "npm",
       "linter": "eslint",
       "formatter": "prettier"
     }

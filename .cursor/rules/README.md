@@ -6,8 +6,8 @@ This folder contains **behavior rules** for AI agents: code quality, security, w
 
 - **Precedencia:** `docs/` por encima de reglas genéricas del hub; ver `rootwave-ai-guidelines.mdc`.
 - **Caveman:** default (`docs/AGENTS.md`). `human.mdc` es bajo demanda (no `alwaysApply`).
-- **Estándares JS/TS:** `04-code-quality/01_code-standards.mdc` usa **globs** (`*.ts`, `*.tsx`, …), no inyecta pnpm/TS en cada conversación Python.
-- **Config alineada al stack:** `cursor-config.json` → FastAPI, Ruff, Mypy, React+Vite, pnpm.
+- **Estándares JS/TS:** `04-code-quality/01_code-standards.mdc` usa **globs** (`*.ts`, `*.tsx`, …). **npm** para JS; **uv** para Python (`docs/CONVENTIONS.md`).
+- **Config alineada al stack:** `cursor-config.json` → FastAPI, Ruff, Mypy, React+Vite, **npm**, **uv**, **pre-commit**.
 
 ---
 

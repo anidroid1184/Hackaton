@@ -7,15 +7,15 @@ alwaysApply: false
 
 ## Package Management
 
-**Rule**: Use `pnpm` exclusively for package management.
+**Rule (Rootwave)**: Use **`npm`** exclusively for JavaScript/TypeScript package management. Python uses **`uv`** (`uv add`, `uv run`); see `docs/CONVENTIONS.md`.
 
 **Actions**:
-- ✅ Install: `pnpm install`
-- ✅ Verify: `pnpm verify` (runs before CI)
-- ✅ Add package: `pnpm add <package> --save-exact`
-- 🚫 Never use `npm install`, `yarn install`, or `npm ci`
+- ✅ Install: `npm ci` (CI) or `npm install` (local)
+- ✅ Add package: `npm install <package> --save-exact` (or `--save-dev` for dev deps)
+- ✅ Scripts: `npm run <script>` (lint, build, test — per `package.json`)
+- 🚫 Do not use `pnpm` or `yarn` in this repo unless team explicitly agrees
 
-**Reference**: `package.json` must include `"packageManager": "pnpm@<version>"`.
+**Reference**: root `package.json` / frontend `package.json` scripts.
 
 ## TypeScript Type Safety
 
@@ -25,7 +25,7 @@ alwaysApply: false
 - ✅ Enable strict mode: `tsconfig.json` → `"strict": true`
 - ✅ Type all function parameters and return values
 - ✅ Use `unknown` instead of `any` when type is truly unknown
-- ✅ Run type check: `pnpm typecheck` or `tsc --noEmit`
+- ✅ Run type check: `npm run typecheck` (if defined) or `tsc --noEmit`
 - 🚫 Never use `any`, `@ts-ignore`, or `@ts-expect-error` without justification
 
 **Examples**:

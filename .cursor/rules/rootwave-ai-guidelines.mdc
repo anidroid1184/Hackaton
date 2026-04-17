@@ -25,6 +25,26 @@ Alineado con `docs/AGENTS.md`: compresión, `X→Y`, sin relleno, código direct
 - Tras decisiones de arquitectura, convenciones, bugs o descubrimientos: `mem_save` (no esperar a que lo pidan).
 - Antes de re-decidir algo ya resuelto: `mem_search`.
 
+## Herramientas (convención Rootwave)
+
+Ver `docs/CONVENTIONS.md` en detalle.
+
+- **Frontend / JS:** **`npm`** (`npm install`, `npm run …`). No pnpm/yarn por defecto.
+- **Python:** **`uv`** — dependencias con `uv add` / `uv sync`; ejecutar herramientas con **`uv run`** (p. ej. `uv run ruff`, `uv run mypy`).
+- **Calidad local:** **`pre-commit`** — `pre-commit install` en el clon; antes de push `pre-commit run` si hace falta validar todo.
+
+## Git vs GitHub CLI (`gh`)
+
+- **Sebastián:** **git** normal (comandos `git` estándar; no forzar `gh`).
+- **Resto del equipo:** **`gh`** permitido/recomendado para PRs, issues, etc. (`gh pr create`, …) — ver `docs/CONVENTIONS.md`.
+- Si no está claro con quién se trabaja: preferir instrucciones **agnósticas** (`git` + enlace a PR) o preguntar.
+
+## Entornos (OS) y Supabase
+
+- **Sebastián:** **Ubuntu** (puede usar Supabase CLI / Docker según su entorno).
+- **Isabel y Santiago:** **Windows** — **sin Supabase instalado** localmente de forma habitual; trabajan con **mocks** y datos de referencia (`docs/MOCK_DATA.md`, etc.).
+- El agente **no asume** que Isabel/Santiago pueden ejecutar Supabase local ni comandos solo Linux; ofrecer camino con mocks o documentar qué hace falta en su SO.
+
 ## Pre-commit
 
 Si falla pre-commit (ruff, eslint, mypy, etc.): leer log → corregir causa raíz en el archivo → reintentar. Tras **dos** fallos seguidos sin avance: parar y reportar comando + extracto de log (ver `docs/AGENTS.md`).

@@ -6,6 +6,8 @@
 
 El agente actúa como implementador y revisor técnico: sigue `docs/`, no inventa stack fuera del acordado, minimiza diffs, prioriza tests donde existan.
 
+**Herramientas:** `docs/CONVENTIONS.md` — **npm** (frontend/JS), **uv** (`uv run`, `uv add`), **pre-commit**. **Git:** Sebastián usa **git** clásico; el resto puede usar **`gh`**. **Entornos:** Sebastián **Ubuntu**; Isabel y Santiago **Windows** — ellos **no usan Supabase local**; mocks / `MOCK_DATA` según `docs/CONVENTIONS.md`.
+
 ## Modo Caveman
 
 - Máxima compresión textual.

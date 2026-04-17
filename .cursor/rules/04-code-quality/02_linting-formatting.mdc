@@ -91,10 +91,11 @@ alwaysApply: false
 
 **Rule**: Pre-commit hooks must run lint, type-check, and format checks.
 
-**Actions**:
-- ✅ Run `pnpm lint` (ESLint)
-- ✅ Run `pnpm format:check` (Prettier)
-- ✅ Run `pnpm typecheck` (TypeScript)
+**Actions (Rootwave: npm + pre-commit)**:
+- ✅ Run `npm run lint` (ESLint) when defined in `package.json`
+- ✅ Run `npm run format:check` (Prettier) when defined
+- ✅ Run `npm run typecheck` or `tsc --noEmit` (TypeScript)
+- ✅ Repo-level: **`pre-commit run`** (see `docs/CONVENTIONS.md`)
 - 🚫 Never disable ESLint rules without team approval
 - 🚫 Never commit if checks fail
 

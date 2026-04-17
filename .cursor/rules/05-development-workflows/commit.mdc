@@ -37,14 +37,12 @@ alwaysApply: false
 
 **Rule**: All commits must pass pre-commit checks before execution.
 
-**Required Checks** (in order):
-1. `pnpm verify` - Dependency integrity
-2. `tsc --noEmit` - TypeScript compilation
-3. `pnpm lint` - ESLint linting
-4. `pnpm format:check` - Prettier formatting
-5. `pnpm test` - Unit/integration tests
+**Required checks (Rootwave — see `docs/CONVENTIONS.md`)**:
+1. **`pre-commit`** — hooks from `.pre-commit-config.yaml` (run via `pre-commit install` + commit, or `pre-commit run` manually)
+2. **npm** — `npm run lint`, `npm test`, etc. as defined in `package.json`
+3. **uv** — `uv run ruff`, `uv run mypy`, etc. for Python as applicable
 
-**Reference**: `.husky/pre-commit` hook configuration.
+**Reference**: `.pre-commit-config.yaml`; frontend `package.json` scripts.
 
 **Skip Checks** (use sparingly):
 ```bash

@@ -8,7 +8,7 @@ Perform comprehensive code quality and security checks.
 
 ## Primary Task
 
-Run `pnpm run check` (or project-specific check command) and resolve any resulting errors.
+Run the project check command (Rootwave: **`npm run check`** or `npm run lint` / `npm test` según `package.json`; Python con **`uv run`**; siempre validar **`pre-commit run`**) and resolve any resulting errors.
 
 ## Important
 
@@ -24,13 +24,14 @@ Run `pnpm run check` (or project-specific check command) and resolve any resulti
 | 2   | **Security: Secrets**      | Trivy         | `trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .` |
 | 3   | **Security: Dependencies** | Trivy         | `trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .`   |
 | 4   | **Code Health**            | CodeScene MCP | `pre_commit_code_health_safeguard` with git repo path                 |
-| 5   | **Linting**                | ESLint        | `pnpm lint`                                                           |
-| 6   | **Formatting**             | Prettier      | `pnpm format:check`                                                   |
-| 7   | **Tests**                  | Vitest/Jest   | `pnpm test`                                                           |
+| 5   | **Linting**                | ESLint        | `npm run lint`                                                        |
+| 6   | **Formatting**             | Prettier      | `npm run format:check` (si existe)                                    |
+| 7   | **Tests**                  | Vitest/Jest   | `npm test` / `npm run test`                                           |
+| —   | **Hooks (repo)**          | pre-commit    | `pre-commit run`                                                      |
 
 ## Process
 
-1. Run the project check command (`pnpm run check` or equivalent)
+1. Run the project check command (`npm run check` or equivalent; **`pre-commit run`** para el pipeline del repo)
 2. Run `trivy fs --scanners secret --exit-code 1 --severity HIGH,CRITICAL .` for secret scanning
 3. Run `trivy fs --scanners vuln --exit-code 1 --severity HIGH,CRITICAL .` for dependency scanning
 4. Run CodeScene `pre_commit_code_health_safeguard` on the repo (if MCP is available and workspace is a git repo)
@@ -47,8 +48,8 @@ Run `pnpm run check` (or project-specific check command) and resolve any resulti
 
 ## For Different Project Types
 
-- **JavaScript/TypeScript**: `pnpm run check`
-- **Python**: `black --check . && isort --check . && flake8 . && mypy .`
+- **JavaScript/TypeScript**: `npm run check` (o scripts en `package.json`)
+- **Python (Rootwave)**: **`uv run ruff check`**, **`uv run mypy`**, etc. (ver `docs/CONVENTIONS.md`)
 - **Rust**: `cargo check && cargo clippy`
 - **Go**: `go vet ./... && golangci-lint run`
 - **Swift**: `swift-format lint . && swiftlint`

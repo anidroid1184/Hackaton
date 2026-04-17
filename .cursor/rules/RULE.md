@@ -6,12 +6,12 @@ Comportamiento detallado: `rules/rootwave-ai-guidelines.mdc` (siempre activa) y 
 
 - No commitear ni imprimir secretos; configuración sensible vía entorno.
 - Validar entradas externas; evitar composición shell insegura.
-- **Canon del repo:** `docs/` por encima de defaults del hub genérico (Node/pnpm/Next son referencia; este proyecto: FastAPI + React/Vite + Supabase según `docs/ARCHITECTURE.md`).
+- **Canon del repo:** `docs/` por encima del hub genérico. **Tooling:** npm (JS), uv (`uv run`, `uv add`), pre-commit — ver `docs/CONVENTIONS.md`. **Git:** Sebastián → git clásico; resto → pueden usar `gh`. **SO:** Sebastián Ubuntu; Isabel y Santiago Windows (sin Supabase local → mocks).
 
 ## Defaults (Rootwave)
 
 - Módulos pequeños: ~**300** líneas/archivo, ~**50** líneas/función cuando sea razonable.
-- Python: Ruff + Mypy estricto (`docs/CONVENTIONS.md`).
+- Python: Ruff + Mypy estricto vía **uv** cuando aplique (`docs/CONVENTIONS.md`).
 - TypeScript: estricto; evitar `any` sin justificación.
 
 ## Comunicación
