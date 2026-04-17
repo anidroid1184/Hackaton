@@ -37,7 +37,7 @@ Ver `docs/CONVENTIONS.md` en detalle.
 
 - **Frontend / JS:** **`npm`** (`npm install`, `npm run …`). No pnpm/yarn por defecto.
 - **Python:** **`uv`** — dependencias con `uv add` / `uv sync`; ejecutar herramientas con **`uv run`** (p. ej. `uv run ruff`, `uv run mypy`).
-- **Calidad local:** **`pre-commit`** — `pre-commit install` en el clon; antes de push `pre-commit run` si hace falta validar todo.
+- **Calidad local:** **`pre-commit`** — `pre-commit install` en el clon; antes de push `pre-commit run` si hace falta validar todo. Incluye **ggshield** (GitGuardian): requiere `GITGUARDIAN_API_KEY` — ver `docs/CONVENTIONS.md`.
 
 ## Git vs GitHub CLI (`gh`)
 

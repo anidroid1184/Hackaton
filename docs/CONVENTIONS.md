@@ -20,6 +20,7 @@
 - Una vez por clon: `pre-commit install` (engancha hooks en `git commit`).
 - Antes de push, si hubo cambios fuera del flujo normal: **`pre-commit run`** (o `pre-commit run --all-files` si aplica).
 - No integrar cambios que fallen pre-commit / CI.
+- **GitGuardian ggshield** (`id: ggshield`): escanea secretos en el commit. Requiere **`GITGUARDIAN_API_KEY`** (token desde el [dashboard de GitGuardian](https://dashboard.gitguardian.com)) exportada en el entorno o en un archivo que cargues antes de commitear. Sin clave, el hook fallará al autenticar; emergencia puntual (no abusar): `SKIP=ggshield git commit …`.
 
 ---
 
