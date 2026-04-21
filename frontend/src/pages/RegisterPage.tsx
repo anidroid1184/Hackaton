@@ -1,6 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
+import logoImg from '/LogoTechosRentables.png'
 import { isAuthMockMode } from '../auth/authEnv'
 import { supabase } from '../lib/supabaseClient'
 
@@ -42,7 +43,7 @@ export function RegisterPage() {
       <div className="card relative z-10 p-6 sm:p-8 md:p-10">
         <div className="mb-8 flex flex-col items-center space-y-3 text-center">
           <img
-            src="/LogoTechosRentables.png"
+            src={logoImg}
             alt="Techos Rentables"
             width={220}
             height={120}

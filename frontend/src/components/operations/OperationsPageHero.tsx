@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { assetUrl } from '../../lib/assetUrl'
 
 type Props = {
   eyebrow: string
@@ -16,7 +17,7 @@ export function OperationsPageHero({
   eyebrow,
   title,
   description,
-  mascotSrc = '/mascota.png',
+  mascotSrc = assetUrl('/mascota.png'),
 }: Props) {
   return (
     <header className="card overflow-hidden p-6 sm:p-8">

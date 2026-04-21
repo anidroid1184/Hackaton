@@ -5,6 +5,8 @@
  * Sustituir por supabase-js + GET /stats/{client_id} en backend real cuando no uses mock-hub.
  */
 
+import { assetUrl } from './assetUrl'
+
 export type {
   PerformanceSummary,
   PromiseVsReal,
@@ -89,7 +91,7 @@ export function getSupportSnapshotMock(): SupportSnapshot {
         icon: 'chat',
         title: 'Chat de soporte',
         detail: 'Respuesta estimada: 5 a 10 minutos.',
-        iconSrc: '/whatsapp.png.png',
+        iconSrc: assetUrl('/whatsapp.png.png'),
       },
       { icon: 'call', title: 'Línea directa', detail: 'Disponible lunes a sábado de 7:00 a 20:00.' },
       { icon: 'event_available', title: 'Visita técnica', detail: 'Agenda mantenimiento o revisión.' },

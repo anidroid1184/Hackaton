@@ -1,3 +1,5 @@
+import logoImg from '/LogoTechosRentables.png'
+
 type LogoProps = {
   size?: 'sm' | 'md' | 'lg'
   withWordmark?: boolean
@@ -18,7 +20,7 @@ export function Logo({ size = 'md', withWordmark = true, className = '' }: LogoP
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
       <img
-        src="/LogoTechosRentables.png"
+        src={logoImg}
         alt="Logo MiTechoRentable"
         className={`${s.img} w-auto object-contain`}
         decoding="async"

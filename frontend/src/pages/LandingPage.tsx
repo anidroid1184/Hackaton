@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Logo } from '../components/Logo'
 import { ThemeToggle } from '../theme/ThemeToggle'
+import heroBgImg from '/ImagenFondoPagPrincipal.png'
+import mascotaImg from '/MascotaConPanel.png'
 
 /**
  * Landing pública. Usa los mismos tokens (primary-container ámbar, secondary verde,
@@ -9,7 +11,7 @@ import { ThemeToggle } from '../theme/ThemeToggle'
  * Si hay sesión activa, `RedirectIfAuthed` en App.tsx ya envía al /dashboard, así que
  * aquí no necesitamos condicionales sobre `user`.
  */
-const LANDING_HERO_BG = '/ImagenFondoPagPrincipal.png'
+const LANDING_HERO_BG = heroBgImg
 
 export function LandingPage() {
   return (
@@ -138,7 +140,7 @@ export function LandingPage() {
                 <div className="absolute inset-0 flex min-h-0 flex-col justify-between gap-4 p-7 md:p-10">
                   <div className="relative flex min-h-0 w-full flex-1 items-center justify-center">
                     <img
-                      src="/MascotaConPanel.png"
+                      src={mascotaImg}
                       alt="Dashboard Masconta"
                       className="h-[90%] w-[90%] max-h-full max-w-full object-contain object-center"
                       decoding="async"

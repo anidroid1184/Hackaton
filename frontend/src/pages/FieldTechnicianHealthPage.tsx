@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { OperationsPageHero } from '../components/operations/OperationsPageHero'
+import { assetUrl } from '../lib/assetUrl'
 import {
   fetchTechnicianPreventiveTasksData,
   getTechnicianCoreFallback,
@@ -30,7 +31,7 @@ export function FieldTechnicianHealthPage() {
       <OperationsPageHero
         eyebrow="Tecnico de Campo"
         title="Salud preventiva"
-        mascotSrc="/MascotaConPanel.png"
+        mascotSrc={assetUrl('/MascotaConPanel.png')}
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
