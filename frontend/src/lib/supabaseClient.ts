@@ -15,22 +15,25 @@ function resolveUrlAndKey(): { url: string; anonKey: string } {
   if (url && anonKey) {
     return { url, anonKey }
   }
+  // Modo mock explícito (funciona en DEV y PROD)
+  if (isAuthMockMode()) {
+    console.info(
+      '[MiTechoRentable] Auth mock mode: login local, sin Supabase Auth.',
+    )
+    return { url: PLACEHOLDER_URL, anonKey: LOCAL_DEV_ANON_KEY }
+  }
   if (import.meta.env.DEV) {
-    if (isAuthMockMode()) {
-      console.info(
-        '[MiTechoRentable] Sin VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY: modo demo (login mock). No se usa Supabase Auth.',
-      )
-      return { url: PLACEHOLDER_URL, anonKey: LOCAL_DEV_ANON_KEY }
-    }
     // Evita pantalla en blanco por throw en import: la app renderiza; auth fallará si el stack no está levantado.
     console.warn(
       '[MiTechoRentable] Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en .env; usando URL/anon del Supabase local.',
     )
     return { url: LOCAL_DEV_URL, anonKey: LOCAL_DEV_ANON_KEY }
   }
-  throw new Error(
-    'MiTechoRentable: en producción se requieren VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en el entorno de build.',
+  // PROD sin env vars ni mock → fallback a mock en lugar de crashear
+  console.warn(
+    '[MiTechoRentable] Producción sin credenciales Supabase: activando modo demo automáticamente.',
   )
+  return { url: PLACEHOLDER_URL, anonKey: LOCAL_DEV_ANON_KEY }
 }
 
 const { url, anonKey } = resolveUrlAndKey()

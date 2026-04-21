@@ -15,6 +15,7 @@ export const DEMO_CLIENT_ID = '00000000-0000-4000-8000-000000000001'
 
 // #region agent log
 function debugLog(message: string, data: Record<string, unknown>): void {
+  if (!import.meta.env.DEV) return
   if (import.meta.env.MODE === 'test') return
   fetch('http://127.0.0.1:7745/ingest/149a0cbd-0dad-49e7-9d41-14f1b33b215c', {
     method: 'POST',
