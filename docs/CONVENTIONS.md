@@ -4,8 +4,11 @@
 
 ### JavaScript / frontend
 
-- **npm** como gestor de paquetes: `npm install`, `npm ci`, `npm run <script>`.
-- No usar **pnpm** ni **yarn** en este repo salvo decisión explícita del equipo.
+- **npm** como gestor de paquetes en **`frontend/`**: `npm install`, `npm ci`, `npm run <script>`.
+- **Excepción — `mock-hub/`:** el servidor opcional de stats sintéticos usa **`pnpm`** en esa carpeta (ver `mock-hub/README.md` y `docs/ARCHITECTURE.md`). No mezclar dependencias del mock-hub con el árbol `frontend/`.
+- No usar **pnpm** ni **yarn** en el resto del repo salvo la excepción anterior o decisión explícita del equipo.
+- **Supabase en el browser:** `@supabase/supabase-js` **2.70.x** (sesión/JWT alineados con validación en FastAPI — ver `docs/API_SPEC.yml`).
+- Variables y modos (proveedor/simulacion): ver `docs/ENVIRONMENT.md`; para flujo mock en paralelo, ver `docs/MOCK_DATA.md`.
 
 ### Python / backend
 
@@ -52,6 +55,14 @@
 - **ESLint** y **Prettier** obligatorios (scripts vía **npm** en el `package.json` del frontend).
 - **TypeScript estricto** (`strict: true` o equivalente).
 - **Prohibido** usar `any` (usar tipos concretos, `unknown` con narrowing, o genéricos).
+
+### Sistema visual y UX (obligatorio)
+
+- Mantener **un solo sistema de tokens** en `frontend/src/index.css` (sin paletas paralelas por pantalla).
+- Todo nuevo UI del cliente natural debe reutilizar componentes base en `frontend/src/components/natural/` antes de crear variantes nuevas.
+- El modo **claro/oscuro** se controla únicamente por `ThemeProvider` + `ThemeToggle`; no hardcodear colores directos fuera de tokens.
+- Las nuevas pantallas deben respetar jerarquía: `Hero -> métricas -> acción primaria -> acción secundaria`.
+- Si se agrega un rol o vista nueva, documentar primero objetivo UX y estado en `docs/USER_FLOWS.md` y `docs/TASKS.md`.
 
 ## Git
 

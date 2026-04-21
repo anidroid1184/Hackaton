@@ -1,0 +1,60 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "minimax": {
+      "models": {
+        "minimax-m2.7": {
+          "name": "MiniMax M2.7 (196K ctx, agentic)"
+        },
+        "minimax-m2.5": {
+          "name": "MiniMax M2.5 (196K ctx)"
+        },
+        "minimax-m2.1": {
+          "name": "MiniMax M2.1 (196K ctx)"
+        },
+        "minimax-m2": {
+          "name": "MiniMax M2 (196K ctx)"
+        },
+        "minimax-m1": {
+          "name": "MiniMax M1 (1M ctx)"
+        }
+      }
+    },
+    "openrouter": {
+      "models": {
+        "minimax/minimax-m2.7": {
+          "name": "MiniMax M2.7 via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-m2.5": {
+          "name": "MiniMax M2.5 via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-m2.5:free": {
+          "name": "MiniMax M2.5 Free via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-m2.1": {
+          "name": "MiniMax M2.1 via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-m2": {
+          "name": "MiniMax M2 via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-m1": {
+          "name": "MiniMax M1 via OpenRouter",
+          "attachment": true
+        },
+        "minimax/minimax-01": {
+          "name": "MiniMax-01 via OpenRouter (1M ctx)",
+          "attachment": true
+        },
+        "minimax/minimax-m2-her": {
+          "name": "MiniMax M2-HER via OpenRouter",
+          "attachment": true
+        }
+      }
+    }
+  }
+}

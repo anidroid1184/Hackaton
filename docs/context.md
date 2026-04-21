@@ -6,11 +6,14 @@
 
 | Doc | Contenido |
 | --- | --- |
-| [AGENTS.md](./AGENTS.md) | Rol, caveman, pre-commit, límites |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Stack, capas Routers → Domain → Database |
-| [CONVENTIONS.md](./CONVENTIONS.md) | npm, uv, pre-commit; git/`gh`; OS; mocks; **credenciales**; `supabase/` en repo sin secretos |
-| [API_SPEC.md](./API_SPEC.md) | Contrato API (si aplica) |
+| [../context.md](../context.md) | **Contexto estratégico MiTechoRentable** (resumen, diferenciadores, KPIs, demo) |
+| [AGENTS.md](./AGENTS.md) | Agentes y responsabilidades |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Flujo Tinku → FastAPI → Supabase → React |
+| [USER_FLOWS.md](./USER_FLOWS.md) | Flujos: Cliente natural / corporativo, Operaciones TR (War Room, agenda, analítica), Técnico de Campo |
+| [API_SPEC.yml](./API_SPEC.yml) | OpenAPI — seguridad (JWT Supabase vs `X-Ingest-Key`), pipeline de datos, rutas |
+| [API_SPEC.md](./API_SPEC.md) | Ejemplos de formato (legado, ver `.yml`) |
+| [CONVENTIONS.md](./CONVENTIONS.md) | uv, pre-commit; git/`gh`; OS; mocks; **credenciales** |
 | [DATABASE.md](./DATABASE.md) | Datos / Supabase |
-| [TASKS.md](./TASKS.md) | Tablero / tareas |
+| [TASKS.md](./TASKS.md) | Tablero Kanban + tareas por persona (Isabel/Santiago: vistas frontend) |
 
 **Precedencia:** si algo en el hub `.cursor/` contradice estos docs, mandan **`docs/`**.

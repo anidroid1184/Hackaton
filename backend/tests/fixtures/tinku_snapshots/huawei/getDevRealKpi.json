@@ -1,0 +1,8 @@
+{
+  "_skipped": true,
+  "_reason": "middleware_sin_proveedor",
+  "manifest_id": "huawei-dev-real-kpi",
+  "provider": "huawei",
+  "http_status": 404,
+  "body_preview": "{\"detail\":\"Provider 'huawei' not found. Available providers: deye, growatt\"}"
+}

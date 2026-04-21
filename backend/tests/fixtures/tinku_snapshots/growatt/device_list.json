@@ -1,0 +1,75 @@
+{
+  "error_msg": "",
+  "data": {
+    "devices": [
+      {
+        "last_update_time": "2025-04-11 11:03:48",
+        "device_id": 0,
+        "device_sn": "BDG5BHA01A",
+        "lost": true,
+        "model": "S25B08D00T00P0FU03M012C",
+        "type": 1,
+        "datalogger_sn": "XGD4A471VN",
+        "manufacturer": "Growatt",
+        "status": 0
+      },
+      {
+        "last_update_time": "2025-04-11 11:03:48",
+        "device_id": 0,
+        "device_sn": "BDG5BHA01A",
+        "lost": true,
+        "model": "S25B08D00T00P0FU03M012C",
+        "type": 4,
+        "datalogger_sn": "XGD4A471VN",
+        "manufacturer": "Growatt",
+        "status": -1
+      },
+      {
+        "last_update_time": "2025-04-11 11:03:48",
+        "device_id": 0,
+        "device_sn": "LXJEE5F001",
+        "lost": true,
+        "model": "S25B08D00T36P0FU03M00C8",
+        "type": 1,
+        "datalogger_sn": "XGD4A4821T",
+        "manufacturer": "Growatt",
+        "status": 0
+      },
+      {
+        "last_update_time": "2025-04-11 11:03:48",
+        "device_id": 0,
+        "device_sn": "LXJEE5F001",
+        "lost": true,
+        "model": "S25B08D00T36P0FU03M00C8",
+        "type": 4,
+        "datalogger_sn": "XGD4A4821T",
+        "manufacturer": "Growatt",
+        "status": -1
+      },
+      {
+        "last_update_time": "2024-11-19 14:14:26",
+        "device_id": 0,
+        "device_sn": "LWJ0BK601J",
+        "lost": true,
+        "model": "S25B08D00T36P0FU03M0096",
+        "type": 1,
+        "datalogger_sn": "XGD4A4821T",
+        "manufacturer": "Growatt",
+        "status": 0
+      },
+      {
+        "last_update_time": "2024-11-19 14:14:26",
+        "device_id": 0,
+        "device_sn": "LWJ0BK601J",
+        "lost": true,
+        "model": "S25B08D00T36P0FU03M0096",
+        "type": 4,
+        "datalogger_sn": "XGD4A4821T",
+        "manufacturer": "Growatt",
+        "status": -1
+      }
+    ],
+    "count": 3
+  },
+  "error_code": 0
+}

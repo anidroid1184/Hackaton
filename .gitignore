@@ -27,3 +27,6 @@ secrets.json
 
 # Logs
 *.log
+
+# Added by ggshield
+.cache_ggshield

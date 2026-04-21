@@ -1,0 +1,104 @@
+# Manifest de endpoints middleware Tinku (techos.thetribu.dev).
+# Sincronizar cambios con docs/TINKU_MIDDLEWARE_API.yml.
+# Las respuestas JSON se escriben en tinku_snapshots/ (gitignore); no commitear secretos.
+
+version: 1
+entries:
+  - id: deye-station-list
+    provider: deye
+    method: POST
+    path: v1.0/station/list
+    body: { page: 1, size: 10 }
+    output_file: deye/station_list.json
+    expected_status: 200
+
+  # Dispositivos por estación (doc Deye: POST /v1.0/station/device con stationIds).
+  # /v1.0/device/list con solo page/size requiere token de app; vía middleware fallaba 2101019.
+  - id: deye-device-list
+    provider: deye
+    method: POST
+    path: v1.0/station/device
+    requires_env:
+      - TINKU_DEYE_STATION_ID
+    body:
+      page: 1
+      size: 20
+      stationIds:
+        - "${TINKU_DEYE_STATION_ID}"
+    output_file: deye/device_list.json
+    expected_status: 200
+
+  # Doc oficial: campo ``deviceList`` (lista de deviceSn), no ``snList``.
+  - id: deye-device-latest
+    provider: deye
+    method: POST
+    path: v1.0/device/latest
+    optional: true
+    requires_env:
+      - TINKU_DEYE_SN
+    body:
+      deviceList:
+        - "${TINKU_DEYE_SN}"
+    output_file: deye/device_latest.json
+    expected_status: 200
+
+  - id: huawei-station-list
+    provider: huawei
+    method: POST
+    path: thirdData/getStationList
+    body: {}
+    output_file: huawei/getStationList.json
+    expected_status: 200
+
+  # Sin proveedor `huawei` en el middleware: la petición devuelve 404 y el test escribe stub en disco.
+  - id: huawei-dev-list
+    provider: huawei
+    method: POST
+    path: thirdData/getDevList
+    body: {}
+    output_file: huawei/getDevList.json
+    expected_status: 200
+
+  - id: huawei-dev-real-kpi
+    provider: huawei
+    method: POST
+    path: thirdData/getDevRealKpi
+    body: {}
+    output_file: huawei/getDevRealKpi.json
+    expected_status: 200
+
+  - id: growatt-plant-list
+    provider: growatt
+    method: GET
+    path: v1/plant/list
+    output_file: growatt/plant_list.json
+    expected_status: 200
+
+  - id: growatt-device-list
+    provider: growatt
+    method: GET
+    path: v1/device/list
+    optional: true
+    requires_env:
+      - TINKU_GROWATT_PLANT_ID
+    query:
+      plant_id: "${TINKU_GROWATT_PLANT_ID}"
+    output_file: growatt/device_list.json
+    expected_status: 200
+
+  # Doc Deye: granularity 2 = día; startAt/endAt en yyyy-MM-dd (hasta 31 días).
+  - id: deye-station-history
+    provider: deye
+    method: POST
+    path: v1.0/station/history
+    requires_env:
+      - TINKU_DEYE_STATION_ID
+      - TINKU_DEYE_HISTORY_START
+      - TINKU_DEYE_HISTORY_END
+    body:
+      stationId: "${TINKU_DEYE_STATION_ID}"
+      granularity: 2
+      startAt: "${TINKU_DEYE_HISTORY_START}"
+      endAt: "${TINKU_DEYE_HISTORY_END}"
+    output_file: deye/station_history.json
+    expected_status: 200

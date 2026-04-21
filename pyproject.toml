@@ -9,6 +9,11 @@ description = "Monorepo Rootwave — raíz solo para tooling (ruff/mypy/bandit).
 [tool.uv]
 package = false
 
+[tool.uv.workspace]
+members = [
+    "backend",
+]
+
 [tool.ruff]
 target-version = "py313"
 line-length = 100

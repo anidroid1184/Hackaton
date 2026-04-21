@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: Middleware Tinku (hackathon)
+  version: "1.0"
+  description: |
+    **No es el proceso FastAPI local.** Este documento registra las rutas que el equipo invoca en
+    `https://techos.thetribu.dev/<proveedor>/<ruta-del-proveedor>` según
+    `docs/resources/technical_guide.md`.
+
+    Autenticación: header `Authorization` con la API key del equipo **tal cual** (`tk_...`), sin prefijo `Bearer`.
+
+    Los cuerpos y respuestas dependen de cada fabricante; aquí se documentan operaciones usadas por el pipeline
+    hacia `IngestBatch` / `RawReading` (ver `docs/API_SPEC.yml`). Los esquemas son flexibles hasta contar con
+    snapshots estables (`backend/tests/fixtures/tinku_endpoints.yaml` + JSON generados con `uv run pytest --tinku`).
+
+    **Nota:** el middleware puede habilitar solo un subconjunto de proveedores (`deye`, `huawei`, `growatt`) según entorno.
+servers:
+  - url: https://techos.thetribu.dev
+    description: Middleware hackathon (Tribu)
+
+tags:
+  - name: tinku_deye
+    description: DeyeCloud vía slug `deye`
+  - name: tinku_huawei
+    description: Huawei FusionSolar vía slug `huawei`
+  - name: tinku_growatt
+    description: Growatt vía slug `growatt`
+
+components:
+  securitySchemes:
+    TinkuTeamApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key de equipo (`tk_...`), sin prefijo Bearer.
+
+  schemas:
+    JsonObject:
+      type: object
+      additionalProperties: true
+
+security:
+  - TinkuTeamApiKey: []
+
+paths:
+  /deye/v1.0/station/list:
+    post:
+      tags: [tinku_deye]
+      summary: Listado de estaciones Deye
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example: { page: 1, size: 10 }
+      responses:
+        "200":
+          description: Respuesta Deye (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /deye/v1.0/station/device:
+    post:
+      tags: [tinku_deye]
+      summary: Dispositivos por estación (lista `stationIds`; ver muestras oficiales DeyeCloud)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example: { page: 1, size: 20, stationIds: [40760] }
+      responses:
+        "200":
+          description: Respuesta Deye (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /deye/v1.0/device/list:
+    post:
+      tags: [tinku_deye]
+      summary: Listado paginado de dispositivos Deye
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example: { page: 1, size: 10 }
+      responses:
+        "200":
+          description: Respuesta Deye (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /deye/v1.0/device/latest:
+    post:
+      tags: [tinku_deye]
+      summary: Últimas medidas por dispositivo (body con `deviceList` de deviceSn, hasta 10 por lote)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example: { deviceList: ["2402010117"] }
+      responses:
+        "200":
+          description: Respuesta Deye (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /deye/v1.0/station/history:
+    post:
+      tags: [tinku_deye]
+      summary: Historial de estación (`granularity` 1–4; fechas según granularidad, p. ej. día `yyyy-MM-dd`)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example:
+              stationId: 40760
+              granularity: 2
+              startAt: "2026-04-01"
+              endAt: "2026-04-18"
+      responses:
+        "200":
+          description: Respuesta Deye (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /huawei/thirdData/getStationList:
+    post:
+      tags: [tinku_huawei]
+      summary: Listado de plantas Huawei (ejemplo hackathon)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+            example: {}
+      responses:
+        "200":
+          description: Respuesta Huawei (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /huawei/thirdData/getDevList:
+    post:
+      tags: [tinku_huawei]
+      summary: Dispositivos por planta / estación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Respuesta Huawei (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /huawei/thirdData/getDevRealKpi:
+    post:
+      tags: [tinku_huawei]
+      summary: KPIs en tiempo real por dispositivo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonObject"
+      responses:
+        "200":
+          description: Respuesta Huawei (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /growatt/v1/plant/list:
+    get:
+      tags: [tinku_growatt]
+      summary: Lista de plantas Growatt
+      responses:
+        "200":
+          description: Respuesta Growatt (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
+
+  /growatt/v1/device/list:
+    get:
+      tags: [tinku_growatt]
+      summary: Lista de dispositivos por planta (query `plant_id` según API Growatt vía middleware)
+      parameters:
+        - name: plant_id
+          in: query
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          description: Respuesta Growatt (sin transformar)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"

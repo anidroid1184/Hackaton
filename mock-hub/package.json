@@ -1,0 +1,16 @@
+{
+  "name": "@solarpulse/mock-hub",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "mock-hub": "tsx src/server.ts",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "tsx": "4.21.0",
+    "typescript": "~6.0.2"
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "code": "1000000",
+  "msg": "success",
+  "success": true,
+  "requestId": "27656cc9afd646be",
+  "deviceDataList": [
+    {
+      "deviceSn": "2402010117",
+      "deviceType": "INVERTER",
+      "deviceState": 1,
+      "collectionTime": 1776489075,
+      "dataList": [
+        {
+          "key": "RatedPower",
+          "value": "6000.00",
+          "unit": "W"
+        },
+        {
+          "key": "DCVoltagePV1",
+          "value": "0.80",
+          "unit": "V"
+        },
+        {
+          "key": "DCVoltagePV2",
+          "value": "1.00",
+          "unit": "V"
+        },
+        {
+          "key": "DCVoltagePV3",
+          "value": "0.00",
+          "unit": "V"
+        },
+        {
+          "key": "DCCurrentPV1",
+          "value": "0.10",
+          "unit": "A"
+        },
+        {
+          "key": "DCCurrentPV2",
+          "value": "0.00",
+          "unit": "A"
+        },
+        {
+          "key": "DCCurrentPV3",
+          "value": "0.00",
+          "unit": "A"
+        },
+        {
+          "key": "DCPowerPV1",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "DCPowerPV2",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "DCPowerPV3",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "TotalDCInputPower",
+          "value": "0.00",
+          "unit": "W"
+        },
+        {
+          "key": "ACVoltageRUA",
+          "value": "0.20",
+          "unit": "V"
+        },
+        {
+          "key": "ACCurrentRUA",
+          "value": "0.10",
+          "unit": "A"
+        },
+        {
+          "key": "ACOutputFrequencyR",
+          "value": "59.95",
+          "unit": "Hz"
+        },
+        {
+          "key": "TotalActiveProduction",
+          "value": "12538.20",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyActiveProduction",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "GridFrequency",
+          "value": "59.95",
+          "unit": "Hz"
+        },
+        {
+          "key": "TotalGridPower",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "CumulativeGridFeedIn",
+          "value": "11352.50",
+          "unit": "kWh"
+        },
+        {
+          "key": "CumulativeEnergyPurchased",
+          "value": "740.40",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyGridFeedIn",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyEnergyPurchased",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "TotalConsumptionPower",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "CumulativeConsumption",
+          "value": "1414.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyConsumption",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "BatteryVoltage",
+          "value": "11.22",
+          "unit": "V"
+        },
+        {
+          "key": "BatteryCurrent",
+          "value": "-0.01",
+          "unit": "A"
+        },
+        {
+          "key": "BatteryPower",
+          "value": "0",
+          "unit": "W"
+        },
+        {
+          "key": "SOC",
+          "value": "0",
+          "unit": "%"
+        },
+        {
+          "key": "TotalChargeEnergy",
+          "value": "12.30",
+          "unit": "kWh"
+        },
+        {
+          "key": "TotalDischargeEnergy",
+          "value": "0.30",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyChargingEnergy",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "DailyDischargingEnergy",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "BatteryRatedCapacity",
+          "value": "202",
+          "unit": "Ah"
+        },
+        {
+          "key": "Temperature- Battery",
+          "value": "25.00",
+          "unit": "℃"
+        },
+        {
+          "key": "DC Temperature",
+          "value": "25.70",
+          "unit": "℃"
+        },
+        {
+          "key": "AC Temperature",
+          "value": "25.20",
+          "unit": "℃"
+        },
+        {
+          "key": "GeneratorFrequency",
+          "value": "0.00",
+          "unit": "Hz"
+        },
+        {
+          "key": "GenVoltage",
+          "value": "3.30",
+          "unit": "V"
+        },
+        {
+          "key": "TotalGeneratorProduction",
+          "value": "0.00",
+          "unit": "kWh"
+        },
+        {
+          "key": "UPSLoadPower",
+          "value": "0",
+          "unit": "W"
+        }
+      ]
+    }
+  ]
+}

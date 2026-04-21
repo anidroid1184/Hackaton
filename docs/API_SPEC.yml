@@ -1,0 +1,445 @@
+openapi: 3.1.0
+info:
+  title: MiTechoRentable API
+  version: 0.1.0
+  description: |
+    **FastAPI = servicio aislado** (cálculo + borde de ingesta). **Supabase** concentra Auth (GoTrue),
+    JWT, RLS y Postgres. Este spec no define login: el cliente React usa `@supabase/supabase-js` **≥ 2.70**
+    (`getSession()`, `access_token`) y envía ese token a las rutas user-facing como `Authorization: Bearer`.
+
+    **Validación JWT en FastAPI:** misma clave/secreto que el proyecto Supabase (Settings → API → JWT).
+    Revisar `aud`, `iss`, `exp` según versión del proyecto; alinear con la guía oficial de la versión **2.70.x**
+    del cliente JS que usen en frontend.
+
+    **Obtención de datos (pipeline):**
+    1. Dispositivos / APIs de marca → **middleware Tinku** (`docs/resources/technical_guide.md`, API key equipo).
+       Contrato y rutas usadas hacia `techos.thetribu.dev`: **`docs/TINKU_MIDDLEWARE_API.yml`** (manifest ejecutable en
+       `backend/tests/fixtures/tinku_endpoints.yaml`).
+    2. Script o worker agrega lecturas en `IngestBatch` → **POST /ingest** con **X-Ingest-Key** (máquina a máquina,
+       no JWT de usuario). FastAPI infiere magnitudes y persiste vía `service_role` en servidor.
+    3. Usuarios humanos → React lee Postgres con supabase-js (RLS) y llama a GET/WS de esta API con **JWT Supabase**.
+
+    Rutas protegidas con JWT exigen que el `sub` del token tenga permiso sobre el recurso (reflejado en claims
+    o comprobación en servidor tras validar firma).
+
+    **Analítica y agenda (Operaciones TR / Técnico de Campo):** `GET /analytics/faults-by-zone`, `GET /maintenance/schedule`,
+    `POST /maintenance/complete` — ver tags `analytics` y `maintenance` en este spec.
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+  - url: https://api.solarpulse.local
+    description: Placeholder prod
+
+tags:
+  - name: meta
+  - name: ingest
+  - name: stats
+  - name: reports
+  - name: alerts
+  - name: analytics
+  - name: maintenance
+  - name: security
+
+paths:
+  /health:
+    get:
+      tags: [meta]
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /ingest:
+    post:
+      tags: [ingest]
+      summary: Ingesta normalizada desde middleware Tinku
+      description: |
+        **Auth:** clave de servicio `X-Ingest-Key` (env `INGEST_API_KEY` en FastAPI), **no** el JWT de usuario.
+        Así la ingesta máquina-a-máquina no compite con GoTrue: Supabase sigue siendo la fuente de identidad humana.
+
+        Recibe lecturas de cualquier marca (nombres heterogéneos). El servidor aplica **Inferencia de Magnitud**
+        y persiste en Supabase `readings`.
+      security:
+        - ingestApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestBatch"
+      responses:
+        "202":
+          description: Aceptado para ingesta asíncrona
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted: { type: integer }
+                  rejected: { type: integer }
+                  batch_id: { type: string, format: uuid }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /stats/{client_id}:
+    get:
+      tags: [stats]
+      summary: KPIs financieros, ambientales y técnicos por cliente
+      security:
+        - supabaseJWT: []
+      parameters:
+        - in: path
+          name: client_id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientStats"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /reports/generate:
+    get:
+      tags: [reports]
+      summary: Generación on-demand de reporte PDF
+      security:
+        - supabaseJWT: []
+      parameters:
+        - in: query
+          name: client_id
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: period
+          required: true
+          schema: { type: string, enum: [month, quarter, year, custom] }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: PDF binario
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /alerts:
+    get:
+      tags: [alerts]
+      summary: Stream de alertas (long polling HTTP)
+      security:
+        - supabaseJWT: []
+      description: |
+        Fallback HTTP para clientes sin WS. Devuelve alertas nuevas desde `since`.
+        Preferir `WS /ws/alerts` para push real.
+      parameters:
+        - in: query
+          name: since
+          schema: { type: string, format: date-time }
+        - in: query
+          name: plant_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: severity
+          schema: { type: string, enum: [info, warn, critical] }
+      responses:
+        "200":
+          description: lista de alertas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Alert" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /ws/alerts:
+    get:
+      tags: [alerts]
+      summary: WebSocket de alertas (Arco Eléctrico, fatiga de breaker, degradación)
+      security:
+        - supabaseJWT: []
+      description: |
+        Upgrade a WebSocket. Tras handshake, primer mensaje puede repetir el token si el gateway lo exige.
+        Mensajes: objetos `Alert` JSON. Filtros `plant_id`/`client_id` en query del handshake.
+      responses:
+        "101": { description: Switching Protocols }
+
+  /analytics/faults-by-zone:
+    get:
+      tags: [analytics]
+      summary: Frecuencia de fallas agregadas por sector (geozone) — Operaciones Techos Rentables
+      security:
+        - supabaseJWT: []
+      description: |
+        Datos para el gráfico de barras **frecuencia de falla vs. sector**. Agrega alertas/tickets en la ventana
+        temporal y agrupa por `geozone` (ver `docs/ARCHITECTURE.md` — Motor de analítica).
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: organization_id
+          schema: { type: string, format: uuid }
+          description: Opcional; por defecto la org del JWT si aplica.
+      responses:
+        "200":
+          description: Serie por zona para barras
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FaultsByZoneResponse"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /maintenance/schedule:
+    get:
+      tags: [maintenance]
+      summary: Agenda de mantenimientos — Operaciones Techos Rentables
+      security:
+        - supabaseJWT: []
+      description: |
+        Lista tabular para **Panel de agenda**: nombre de planta/cliente, dirección, último mantenimiento,
+        próxima fecha agendada, problema. Respeta permisos de org en servidor/RLS.
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: geozone
+          schema: { type: string }
+          description: Filtro opcional por sector/zona.
+      responses:
+        "200":
+          description: Filas de agenda
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MaintenanceScheduleRow" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /maintenance/complete:
+    post:
+      tags: [maintenance]
+      summary: Cierre de visita por Técnico de Campo
+      security:
+        - supabaseJWT: []
+      description: |
+        Marca un mantenimiento como completado tras visita; actualiza agenda y puede liberar sugerencias en War Room.
+        Idempotente por `client_mutation_id` si se reenvía tras offline.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceCompleteBody"
+      responses:
+        "200":
+          description: Mantenimiento cerrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCompleteResult"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    supabaseJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        **Access token** emitido por Supabase Auth (mismo que entrega `getSession()` en JS 2.70+).
+        FastAPI valida firma con el JWT secret del proyecto; no reimplementa login.
+    ingestApiKey:
+      type: apiKey
+      in: header
+      name: X-Ingest-Key
+      description: |
+        Secreto compartido entre middleware Tinku (o worker) y FastAPI. Rotar en producción; nunca en el frontend.
+
+  responses:
+    BadRequest:
+      description: request inválido
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: token/clave inválidos o expirados
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: recurso no encontrado
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [detail]
+      properties:
+        detail: { type: string }
+        code: { type: string }
+
+    IngestBatch:
+      type: object
+      required: [source, readings]
+      properties:
+        source:
+          type: string
+          description: Identificador del middleware/marca (informativo, no usado para mapear)
+          example: tinku-growatt-gw3
+        plant_id:
+          type: string
+          format: uuid
+        readings:
+          type: array
+          items: { $ref: "#/components/schemas/RawReading" }
+
+    RawReading:
+      type: object
+      required: [ts, values]
+      properties:
+        ts: { type: string, format: date-time }
+        device_id: { type: string }
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+              - { type: number }
+              - { type: string }
+          description: |
+            Pares nombre→valor tal como vienen del fabricante
+            (p.ej. `Pac`, `ActivePower`, `P_total`, `kW_inv_1`).
+            El servidor infiere la magnitud por rango físico.
+
+    ClientStats:
+      type: object
+      properties:
+        client_id: { type: string, format: uuid }
+        window:
+          type: object
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+        financial:
+          type: object
+          properties:
+            savings_accumulated_usd: { type: number }
+            roi_curve:
+              type: array
+              items:
+                type: object
+                properties:
+                  t: { type: string, format: date-time }
+                  cumulative_savings_usd: { type: number }
+        environmental:
+          type: object
+          properties:
+            co2_avoided_kg: { type: number }
+            trees_equivalent: { type: number }
+        technical:
+          type: object
+          properties:
+            energy_kwh: { type: number }
+            uptime_contractual_pct: { type: number }
+            power_factor_mean: { type: number }
+            degradation_trend_pct_per_year: { type: number }
+
+    Alert:
+      type: object
+      required: [id, type, severity, ts, plant_id]
+      properties:
+        id: { type: string, format: uuid }
+        type:
+          type: string
+          enum: [arc_fault, breaker_fatigue, degradation, offline, out_of_range]
+        severity: { type: string, enum: [info, warn, critical] }
+        ts: { type: string, format: date-time }
+        plant_id: { type: string, format: uuid }
+        device_id: { type: string }
+        payload:
+          type: object
+          description: señales de soporte (ventana, valores, umbral)
+
+    FaultsByZoneResponse:
+      type: object
+      required: [window, buckets]
+      properties:
+        window:
+          type: object
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+        buckets:
+          type: array
+          items:
+            type: object
+            required: [geozone, fault_count]
+            properties:
+              geozone: { type: string, description: Sector o clave de zona }
+              fault_count: { type: integer, minimum: 0 }
+              normalized_rate:
+                type: number
+                description: Opcional — tasa por MW si el modelo lo expone
+
+    MaintenanceScheduleRow:
+      type: object
+      required: [id, plant_name, address_line]
+      properties:
+        id: { type: string, format: uuid }
+        plant_name: { type: string }
+        client_name: { type: string }
+        address_line: { type: string }
+        last_maintenance_at: { type: string, format: date-time, nullable: true }
+        next_scheduled_at: { type: string, format: date-time, nullable: true }
+        problem_summary: { type: string }
+        geozone: { type: string }
+        suggested_technician_id: { type: string, format: uuid, nullable: true }
+
+    MaintenanceCompleteBody:
+      type: object
+      required: [maintenance_id]
+      properties:
+        maintenance_id: { type: string, format: uuid }
+        notes: { type: string }
+        client_mutation_id: { type: string, description: Idempotencia tras sync offline }
+
+    MaintenanceCompleteResult:
+      type: object
+      required: [maintenance_id, status]
+      properties:
+        maintenance_id: { type: string, format: uuid }
+        status: { type: string, enum: [completed] }
+        completed_at: { type: string, format: date-time }
